@@ -38,6 +38,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+.kiro/
 .tox/
 .nox/
 .coverage
@@ -179,3 +180,7 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Test metrics - can be large and regenerated
+tests/metrics/*.json
+tests/metrics/*.md
