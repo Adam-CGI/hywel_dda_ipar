@@ -5,6 +5,7 @@ import logging
 import json
 from flask import Blueprint, request, jsonify, render_template
 from datetime import datetime
+from app.auth import requires_auth
 from app.services.storage_service import StorageService
 from app.services.extraction_service import ExtractionService
 from app.services.cosmos_service import CosmosService
@@ -30,6 +31,7 @@ chunking_service = ChunkingService()
 
 
 @documents_bp.route('/upload', methods=['POST'])
+@requires_auth
 def upload_document():
     """
     Upload a PDF document for processing.
@@ -303,9 +305,10 @@ def upload_document():
 
 
 @documents_bp.route('/', methods=['GET'])
+@requires_auth
 def list_documents():
     """
-    List all documents.
+    List all documents with timeout protection.
     
     Query params:
         - limit: Maximum number of documents to return (default 100)
@@ -313,9 +316,17 @@ def list_documents():
     Returns:
         JSON array of document records or HTML partial for HTMX
     """
+    import time
+    start_time = time.time()
+    
     try:
         limit = request.args.get('limit', 100, type=int)
+        logger.info(f"Starting document list request - limit={limit}, is_htmx={bool(request.headers.get('HX-Request'))}")
+        
         documents = cosmos_service.list_documents(limit=limit)
+        
+        elapsed = time.time() - start_time
+        logger.info(f"Retrieved {len(documents)} documents in {elapsed:.2f}s")
         
         # Check if request is from HTMX
         if request.headers.get('HX-Request'):
@@ -329,16 +340,37 @@ def list_documents():
         }), 200
         
     except Exception as e:
-        logger.error(f"Failed to list documents: {e}")
+        elapsed = time.time() - start_time
+        logger.error(f"Failed to list documents after {elapsed:.2f}s: {e}", exc_info=True)
+        
         if request.headers.get('HX-Request'):
-            return render_template('document_table_rows.html', documents=[], error=str(e))
+            # Return error message in HTML
+            error_html = f"""
+            <tr>
+                <td colspan="6" class="py-8 px-6 text-center">
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-2xl mx-auto">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                        <h3 class="text-lg font-semibold text-red-800 mb-2">Failed to Load Documents</h3>
+                        <p class="text-sm text-red-600 mb-4">{str(e)}</p>
+                        <button onclick="location.reload()" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>Retry
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            """
+            return error_html, 500
+        
         return jsonify({
             'error': 'Failed to list documents',
-            'message': str(e)
+            'message': str(e),
+            'elapsed': elapsed
         }), 500
 
 
 @documents_bp.route('/<doc_id>', methods=['GET'])
+@requires_auth
 def get_document(doc_id):
     """
     Get document metadata by ID.
@@ -369,6 +401,7 @@ def get_document(doc_id):
 
 
 @documents_bp.route('/<doc_id>', methods=['DELETE'])
+@requires_auth
 def delete_document(doc_id):
     """
     Delete a document (EPIC E.14).
@@ -454,6 +487,7 @@ def delete_document(doc_id):
 
 @documents_bp.route('/ui', methods=['GET'])
 @documents_bp.route('/ui/', methods=['GET'])
+@requires_auth
 def ui_list_documents():
     """
     Render document list UI (EPIC E.11).
@@ -462,6 +496,7 @@ def ui_list_documents():
 
 
 @documents_bp.route('/ui/upload', methods=['GET'])
+@requires_auth
 def ui_upload_form():
     """
     Render upload form UI (EPIC E.12).
@@ -470,6 +505,7 @@ def ui_upload_form():
 
 
 @documents_bp.route('/ui/<doc_id>', methods=['GET'])
+@requires_auth
 def ui_document_detail(doc_id):
     """
     Render document detail UI (EPIC E.13).
@@ -494,13 +530,14 @@ def ui_document_detail(doc_id):
 
 
 @documents_bp.route('/<doc_id>/thumbnail/<int:page_no>', methods=['GET'])
+@requires_auth
 def get_thumbnail(doc_id, page_no):
     """
-    Get thumbnail for a specific page.
-    Returns SAS URL to the thumbnail blob.
+    Get thumbnail for a specific page with caching.
+    Returns redirect to SAS URL with extended expiry and cache headers.
     """
     try:
-        from flask import redirect
+        from flask import redirect, make_response
         
         # Generate thumbnail blob name
         thumb_blob = f"{doc_id}/p{page_no}.png"
@@ -513,11 +550,14 @@ def get_thumbnail(doc_id, page_no):
                 'page_no': page_no
             }), 404
         
-        # Generate SAS URL
-        sas_url = storage_service.generate_sas_url('thumbs', thumb_blob, expiry_hours=1)
+        # Generate SAS URL with 24-hour expiry (instead of 1 hour)
+        sas_url = storage_service.generate_sas_url('thumbs', thumb_blob, expiry_hours=24)
         
-        # Redirect to SAS URL
-        return redirect(sas_url)
+        # Redirect with cache headers
+        response = make_response(redirect(sas_url))
+        response.headers['Cache-Control'] = 'public, max-age=86400'  # 24 hours
+        response.headers['Vary'] = 'Accept-Encoding'
+        return response
         
     except Exception as e:
         logger.error(f"Failed to get thumbnail: {e}")
@@ -528,6 +568,7 @@ def get_thumbnail(doc_id, page_no):
 
 
 @documents_bp.route('/<doc_id>/reindex', methods=['POST'])
+@requires_auth
 def reindex_document(doc_id):
     """
     Reindex a document (EPIC E.13).
@@ -608,6 +649,7 @@ def reindex_document(doc_id):
 
 
 @documents_bp.route('/search', methods=['GET', 'POST'])
+@requires_auth
 def search_documents():
     """
     Search endpoint implementing hybrid BM25 + vector retrieval with citations.
@@ -726,6 +768,7 @@ def search_documents():
 
 
 @documents_bp.route('/search/chunk/<chunk_id>', methods=['GET'])
+@requires_auth
 def get_chunk_detail(chunk_id):
     """
     Get details for a specific chunk by ID.
@@ -758,6 +801,7 @@ def get_chunk_detail(chunk_id):
 
 
 @documents_bp.route('/search/document/<doc_id>', methods=['GET'])
+@requires_auth
 def search_within_document(doc_id):
     """
     Search within a specific document.
@@ -800,6 +844,7 @@ def search_within_document(doc_id):
 
 
 @documents_bp.route('/ui/search', methods=['GET'])
+@requires_auth
 def search_ui():
     """
     Render the search UI page.
@@ -814,6 +859,7 @@ def search_ui():
 # =============================================================================
 
 @documents_bp.route('/chat', methods=['POST'])
+@requires_auth
 def chat():
     """
     RAG-powered chat endpoint using GPT-4o-mini.
@@ -901,6 +947,7 @@ def chat():
 
 
 @documents_bp.route('/ui/chat', methods=['GET'])
+@requires_auth
 def chat_ui():
     """
     Render the RAG chat UI page.

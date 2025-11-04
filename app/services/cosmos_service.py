@@ -195,22 +195,45 @@ class CosmosService:
             logger.error(f"Failed to query documents: {e}")
             raise
     
-    def list_documents(self, limit=100):
+    def list_documents(self, limit=100, include_deleted=False):
         """
-        List all documents.
+        List all documents with optimized query.
         
         Args:
             limit: Maximum number of documents to return
+            include_deleted: Whether to include deleted documents (default False)
             
         Returns:
             list: Document records
         """
         try:
-            query = f"SELECT TOP {limit} * FROM c ORDER BY c.created_at DESC"
-            return self.query_documents(query)
+            # Optimized query: only select needed fields, exclude deleted by default
+            if include_deleted:
+                query = f"""
+                    SELECT TOP {limit} c.id, c.doc_id, c.logical_id, c.origin_filename, 
+                           c.version, c.page_count, c.created_at, c.updated_at, 
+                           c.is_deleted, c.superseded, c.source_uri
+                    FROM c 
+                    ORDER BY c.created_at DESC
+                """
+            else:
+                query = f"""
+                    SELECT TOP {limit} c.id, c.doc_id, c.logical_id, c.origin_filename, 
+                           c.version, c.page_count, c.created_at, c.updated_at, 
+                           c.is_deleted, c.superseded, c.source_uri
+                    FROM c 
+                    WHERE (NOT IS_DEFINED(c.is_deleted) OR c.is_deleted = false)
+                    ORDER BY c.created_at DESC
+                """
+            
+            logger.info(f"Listing documents with limit={limit}, include_deleted={include_deleted}")
+            results = self.query_documents(query)
+            logger.info(f"Retrieved {len(results)} documents from Cosmos DB")
+            return results
         except Exception as e:
-            logger.error(f"Failed to list documents: {e}")
-            raise
+            logger.error(f"Failed to list documents: {e}", exc_info=True)
+            # Return empty list instead of raising to prevent total failure
+            return []
     
     def find_by_logical_id(self, logical_id):
         """

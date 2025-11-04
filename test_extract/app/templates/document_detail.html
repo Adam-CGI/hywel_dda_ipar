@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.origin_filename }} - Document Details{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="mb-8">
+    <nav class="flex items-center space-x-2 text-sm text-gray-600">
+        <a href="/documents" class="hover:text-hywel-600 transition-colors flex items-center">
+            <i class="fas fa-folder-open mr-2"></i>
+            Documents
+        </a>
+        <i class="fas fa-chevron-right text-gray-400"></i>
+        <span class="text-gray-900 font-medium">{{ document.origin_filename }}</span>
+    </nav>
+</div>
+
+<!-- Document Header -->
+<div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100 animate-fade-in">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div class="flex items-start space-x-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                <i class="fas fa-file-pdf text-white text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-3">
+                    {{ document.origin_filename }}
+                </h1>
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <div class="flex items-center bg-gray-100 px-3 py-1 rounded-full">
+                        <i class="fas fa-calendar mr-2 text-gray-500"></i>
+                        <span class="font-medium">{{ document.created_at[:10] }}</span>
+                    </div>
+                    <div class="flex items-center bg-hywel-100 px-3 py-1 rounded-full">
+                        <i class="fas fa-code-branch mr-2 text-hywel-600"></i>
+                        <span class="font-medium text-hywel-800">Version {{ document.version }}</span>
+                    </div>
+                    <div class="flex items-center bg-blue-100 px-3 py-1 rounded-full">
+                        <i class="fas fa-book-open mr-2 text-blue-600"></i>
+                        <span class="font-medium text-blue-800">{{ document.page_count }} pages</span>
+                    </div>
+                    {% if document.is_deleted %}
+                        <div class="flex items-center bg-red-100 px-3 py-1 rounded-full">
+                            <i class="fas fa-trash mr-2 text-red-600"></i>
+                            <span class="font-medium text-red-800">Deleted</span>
+                        </div>
+                    {% elif document.superseded %}
+                        <div class="flex items-center bg-yellow-100 px-3 py-1 rounded-full">
+                            <i class="fas fa-archive mr-2 text-yellow-600"></i>
+                            <span class="font-medium text-yellow-800">Superseded</span>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center bg-green-100 px-3 py-1 rounded-full">
+                            <i class="fas fa-check-circle mr-2 text-green-600"></i>
+                            <span class="font-medium text-green-800">Active</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3">
+            <a href="/api/documents/ui/search?filter=doc_id eq '{{ document.doc_id }}'" class="bg-gradient-to-r from-hywel-500 to-hywel-600 hover:from-hywel-600 hover:to-hywel-700 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <i class="fas fa-search mr-2"></i>
+                Search Document
+            </a>
+            <button
+                hx-post="/api/documents/{{ document.doc_id }}/reindex"
+                hx-target="#reindex-status"
+                hx-swap="innerHTML"
+                hx-indicator="#reindex-spinner"
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+                <span id="reindex-spinner" class="htmx-indicator mr-2">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+                <span class="htmx-indicator hidden mr-2">
+                    <i class="fas fa-sync-alt"></i>
+                </span>
+                Reindex
+            </button>
+            <button
+                onclick="showDeleteModal('{{ document.doc_id }}', '{{ document.origin_filename }}')"
+                class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+                <i class="fas fa-trash mr-2"></i>
+                Delete
+            </button>
+        </div>
+    </div>
+    
+    <div id="reindex-status" class="mt-6"></div>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-slide-up">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">{{ document.page_count }}</p>
+                <p class="text-sm text-gray-600">Pages</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-slide-up" style="animation-delay: 0.1s">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-table text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">{{ document.table_count | default(0) }}</p>
+                <p class="text-sm text-gray-600">Tables</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-slide-up" style="animation-delay: 0.2s">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-font text-purple-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">{{ "{:,}".format(document.text_length | default(0)) }}</p>
+                <p class="text-sm text-gray-600">Characters</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-slide-up" style="animation-delay: 0.3s">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-copy text-yellow-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">{{ (document.near_duplicates | length) if document.near_duplicates else 0 }}</p>
+                <p class="text-sm text-gray-600">Near Duplicates</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Document Information -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-slide-up">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-hywel-600"></i>
+                    Document Information
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">Document ID</label>
+                    <div class="mt-1 p-3 bg-gray-50 rounded-lg border">
+                        <code class="text-xs font-mono text-gray-800 break-all">{{ document.doc_id }}</code>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="text-sm font-medium text-gray-600">Logical ID</label>
+                    <div class="mt-1 p-3 bg-gray-50 rounded-lg border">
+                        <code class="text-xs font-mono text-gray-800 break-all">{{ document.logical_id }}</code>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="text-sm font-medium text-gray-600">Upload Date</label>
+                    <div class="mt-1 p-3 bg-gray-50 rounded-lg border">
+                        <span class="text-sm text-gray-800">{{ document.created_at[:19].replace('T', ' ') }}</span>
+                    </div>
+                </div>
+                
+                {% if document.supersedes %}
+                <div>
+                    <label class="text-sm font-medium text-gray-600">Supersedes</label>
+                    <div class="mt-1 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <a href="/documents/{{ document.supersedes }}" class="text-sm text-yellow-700 hover:text-yellow-800 font-mono break-all">
+                            {{ document.supersedes }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Thumbnails -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-slide-up">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-images mr-2 text-hywel-600"></i>
+                    Page Previews
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="thumbnail-carousel" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {% for i in range(1, document.page_count + 1) %}
+                        <div class="group relative bg-gray-50 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-hywel-400 transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1">
+                            <div class="aspect-[3/4] relative">
+                                <img 
+                                    src="/api/documents/{{ document.doc_id }}/thumbnail/{{ i }}" 
+                                    alt="Page {{ i }}"
+                                    class="w-full h-full object-cover cursor-pointer"
+                                    onclick="showPagePreview('{{ document.doc_id }}', {{ i }})"
+                                    onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EPage {{ i }}%3C/text%3E%3C/svg%3E'"
+                                >
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-white">
+                                <p class="text-sm font-medium text-gray-800 text-center">Page {{ i }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Near Duplicates -->
+{% if document.near_duplicates and document.near_duplicates | length > 0 %}
+<div class="mt-8">
+    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-2xl p-6 shadow-lg animate-slide-up">
+        <div class="flex items-start">
+            <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-xl font-bold text-yellow-900 mb-2">Near Duplicate Documents</h3>
+                <p class="text-yellow-800 mb-4">
+                    This document has {{ document.near_duplicates | length }} near duplicate(s) with similar content:
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for dup_id in document.near_duplicates %}
+                        <a href="/documents/{{ dup_id }}" class="bg-white bg-opacity-50 hover:bg-opacity-75 rounded-lg p-3 transition-all duration-200 flex items-center group">
+                            <i class="fas fa-copy text-yellow-600 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <code class="text-sm font-mono text-yellow-800 break-all">{{ dup_id[:32] }}...</code>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Modal -->
+<div id="delete-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Delete Document</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="delete-modal-message">
+                    Are you sure you want to delete this document? This action cannot be undone.
+                </p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button
+                    id="delete-confirm-btn"
+                    hx-delete="/api/documents/{{ document.doc_id }}"
+                    hx-confirm="This will permanently delete the document."
+                    class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700"
+                >
+                    <i class="fas fa-spinner fa-spin htmx-indicator mr-2"></i>
+                    Delete
+                </button>
+                <button
+                    onclick="closeDeleteModal()"
+                    class="mt-3 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDeleteModal(docId, title) {
+        document.getElementById('delete-modal-message').textContent = 
+            `Are you sure you want to delete "${title}"? This will remove all associated data.`;
+        document.getElementById('delete-modal').classList.remove('hidden');
+        
+        // Add event listener to redirect after successful delete
+        document.getElementById('delete-confirm-btn').addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.successful) {
+                window.location.href = '/documents';
+            }
+        }, { once: true });
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('delete-modal').classList.add('hidden');
+    }
+    
+    function showPagePreview(docId, pageNo) {
+        // Could open a modal with larger preview
+        alert('Page preview feature - would show larger view of page ' + pageNo);
+    }
+</script>
+{% endblock %}

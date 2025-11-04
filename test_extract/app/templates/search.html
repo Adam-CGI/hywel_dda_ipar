@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Search - Hywel Dda IPAR{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100 animate-fade-in">
+    <div class="text-center max-w-4xl mx-auto">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-hywel-500 to-hywel-600 rounded-2xl mb-6 shadow-lg">
+            <i class="fas fa-search text-3xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            Intelligent Document Search
+        </h1>
+        <p class="text-xl text-gray-600 mb-6">
+            Powered by hybrid BM25 + vector search technology for precise, context-aware results
+        </p>
+        <div class="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+            <div class="flex items-center">
+                <i class="fas fa-brain mr-2 text-purple-500"></i>
+                AI-Powered Semantic Search
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+                Lightning Fast Results
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-quote-right mr-2 text-blue-500"></i>
+                Citation Support
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Search Form -->
+<div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-slide-up">
+    <!-- Form Header -->
+    <div class="bg-gradient-to-r from-hywel-50 via-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-hywel-500 to-hywel-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-search text-white text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Search Documents</h2>
+                <p class="text-gray-600">Find information across your IPAR document collection</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-8">
+        <form 
+            hx-post="/api/documents/search" 
+            hx-target="#search-results"
+            hx-indicator="#search-spinner"
+            class="space-y-8"
+        >
+            <!-- Main Search Input -->
+            <div>
+                <label for="query" class="block text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-keyboard mr-2 text-hywel-600"></i>
+                    What would you like to find?
+                </label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 group-focus-within:text-hywel-500 transition-colors duration-200"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="query" 
+                        name="query"
+                        placeholder="Search for performance indicators, policies, procedures..."
+                        class="w-full pl-14 pr-32 py-5 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-hywel-100 focus:border-hywel-500 transition-all duration-200 bg-gray-50 focus:bg-white shadow-sm focus:shadow-lg"
+                        required
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit"
+                        class="absolute right-2 top-2 bottom-2 px-8 bg-gradient-to-r from-hywel-500 to-hywel-600 hover:from-hywel-600 hover:to-hywel-700 text-white rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                    >
+                        <span class="hidden sm:inline">Search</span>
+                        <span id="search-spinner" class="htmx-indicator">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                        <span class="htmx-indicator hidden">
+                            <i class="fas fa-search"></i>
+                        </span>
+                    </button>
+                </div>
+                
+                <!-- Enhanced Quick Search Suggestions -->
+                <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                        Popular searches:
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" onclick="setQuery('performance indicators')" class="px-4 py-2 bg-gradient-to-r from-hywel-100 to-hywel-200 text-hywel-700 rounded-xl text-sm font-medium hover:from-hywel-200 hover:to-hywel-300 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md">
+                            performance indicators
+                        </button>
+                        <button type="button" onclick="setQuery('patient safety')" class="px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 rounded-xl text-sm font-medium hover:from-blue-200 hover:to-blue-300 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md">
+                            patient safety
+                        </button>
+                        <button type="button" onclick="setQuery('quality measures')" class="px-4 py-2 bg-gradient-to-r from-green-100 to-green-200 text-green-700 rounded-xl text-sm font-medium hover:from-green-200 hover:to-green-300 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md">
+                            quality measures
+                        </button>
+                        <button type="button" onclick="setQuery('clinical outcomes')" class="px-4 py-2 bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700 rounded-xl text-sm font-medium hover:from-purple-200 hover:to-purple-300 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md">
+                            clinical outcomes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Advanced Options -->
+            <details class="border-t-2 border-gray-200 pt-8">
+                <summary class="cursor-pointer text-lg font-bold text-gray-700 hover:text-hywel-600 transition-colors flex items-center group">
+                    <div class="w-8 h-8 bg-gray-100 group-hover:bg-hywel-100 rounded-lg flex items-center justify-center mr-3 transition-colors duration-200">
+                        <i class="fas fa-sliders-h text-gray-600 group-hover:text-hywel-600"></i>
+                    </div>
+                    Advanced Search Options
+                    <i class="fas fa-chevron-down ml-auto transform transition-transform duration-200 group-hover:text-hywel-600"></i>
+                </summary>
+                <div class="mt-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label for="top" class="block text-sm font-bold text-gray-700 mb-3">
+                                <i class="fas fa-list-ol mr-2 text-blue-500"></i>
+                                Number of Results
+                            </label>
+                            <select 
+                                id="top" 
+                                name="top"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-hywel-100 focus:border-hywel-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                                <option value="5">5 results</option>
+                                <option value="10" selected>10 results</option>
+                                <option value="25">25 results</option>
+                                <option value="50">50 results</option>
+                                <option value="100">100 results</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter" class="block text-sm font-bold text-gray-700 mb-3">
+                                <i class="fas fa-filter mr-2 text-purple-500"></i>
+                                Document Filter
+                            </label>
+                            <input 
+                                type="text" 
+                                id="filter" 
+                                name="filter"
+                                placeholder="e.g., doc_id eq 'abc123'"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-sm focus:ring-4 focus:ring-hywel-100 focus:border-hywel-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                            <p class="text-xs text-gray-600 mt-2 flex items-center">
+                                <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                                Optional OData filter expression for specific documents
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </form>
+    </div>
+</div>
+
+<!-- Search Results -->
+<div id="search-results" class="animate-fade-in">
+    <!-- Results will be loaded here -->
+    <div class="bg-white rounded-2xl shadow-xl p-12 text-center border border-gray-100">
+        <div class="max-w-md mx-auto">
+            <div class="w-24 h-24 bg-gradient-to-br from-hywel-100 to-hywel-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-search text-3xl text-hywel-600"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Ready to Search</h3>
+            <p class="text-gray-600 mb-6">
+                Enter your search query above to find relevant information across all your IPAR documents using our advanced AI-powered search engine.
+            </p>
+            <div class="flex items-center justify-center space-x-6 text-sm text-gray-500">
+                <div class="flex items-center">
+                    <i class="fas fa-magic mr-2 text-purple-500"></i>
+                    Semantic Understanding
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-target mr-2 text-red-500"></i>
+                    Precise Results
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Citation Preview Modal -->
+<div id="citation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="p-4 border-b flex items-center justify-between">
+            <h3 class="text-lg font-semibold" id="modal-title">Citation Preview</h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6 overflow-y-auto flex-1">
+            <!-- Content loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search utility functions
+    
+    function setQuery(query) {
+        const queryInput = document.getElementById('query');
+        queryInput.value = query;
+        queryInput.focus();
+        
+        // Show feedback
+        ActionFeedback.show(queryInput, '✓ Query set', 1500);
+        StatusManager.showFeedback(`Search query: "${query}"`, 2000);
+    }
+    
+    function showCitationPreview(chunkId, docId, pageNo, thumbUrl) {
+        const modal = document.getElementById('citation-modal');
+        const title = document.getElementById('modal-title');
+        const content = document.getElementById('modal-content');
+        
+        title.textContent = `Page ${pageNo} Preview`;
+        content.innerHTML = `
+            <div class="text-center">
+                <img src="${thumbUrl}" alt="Page ${pageNo}" class="max-w-full h-auto border rounded-lg shadow-lg">
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-2">
+                        <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                        <strong>Chunk Information</strong>
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Chunk ID:</span>
+                            <code class="bg-white px-2 py-1 rounded border ml-2">${chunkId}</code>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Document ID:</span>
+                            <code class="bg-white px-2 py-1 rounded border ml-2">${docId.substring(0, 8)}...</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('citation-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function copyChunkId(chunkId) {
+        navigator.clipboard.writeText(chunkId).then(() => {
+            StatusManager.showFeedback('✓ Chunk ID copied to clipboard', 2000);
+        }).catch(() => {
+            StatusManager.showFeedback('✗ Failed to copy to clipboard', 3000);
+        });
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Close modal on outside click
+    document.getElementById('citation-modal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+    
+    // Enhanced loading states for search
+    document.addEventListener('htmx:beforeRequest', function(event) {
+        if (event.detail.target === '#search-results') {
+            const resultsContainer = document.getElementById('search-results');
+            
+            // Show skeleton loading for search results
+            resultsContainer.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                    <div class="flex items-center mb-6">
+                        <div class="loading-spinner-small mr-3"></div>
+                        <h3 class="text-lg font-semibold text-gray-800">Searching...</h3>
+                    </div>
+                    <div class="space-y-4">
+                        ${Array.from({length: 3}, (_, i) => `
+                            <div class="skeleton-card fade-in-up delay-${i + 1}">
+                                <div class="flex items-start space-x-4">
+                                    <div class="skeleton w-12 h-12 rounded-lg flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <div class="skeleton w-3/4 h-5 mb-2 rounded"></div>
+                                        <div class="skeleton w-full h-4 mb-1 rounded"></div>
+                                        <div class="skeleton w-full h-4 mb-1 rounded"></div>
+                                        <div class="skeleton w-2/3 h-4 rounded"></div>
+                                        <div class="flex space-x-2 mt-3">
+                                            <div class="skeleton w-16 h-6 rounded-full"></div>
+                                            <div class="skeleton w-20 h-6 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <div class="progress-bar max-w-xs mx-auto">
+                            <div class="progress-bar-fill" style="width: 60%;"></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Analyzing documents with AI...</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    document.addEventListener('htmx:afterRequest', function(event) {
+        if (event.detail.target === '#search-results') {
+            // Add fade-in animation to search results
+            const results = document.querySelectorAll('#search-results .animate-slide-up');
+            results.forEach((result, index) => {
+                result.style.animationDelay = `${index * 0.1}s`;
+            });
+        }
+    });
+</script>
+{% endblock %}

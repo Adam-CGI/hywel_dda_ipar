@@ -1,0 +1,26 @@
+[config]
+# Azure App Service deployment configuration
+# Optimizes build process for production deployment
+
+# Use Python 3.11 runtime
+SCM_DO_BUILD_DURING_DEPLOYMENT=true
+ENABLE_ORYX_BUILD=true
+PYTHON_VERSION=3.11
+
+# Optimize build process
+DISABLE_COLLECTSTATIC=1
+PRE_BUILD_SCRIPT_PATH=
+POST_BUILD_SCRIPT_PATH=
+
+# Skip development dependencies in production
+WEBSITE_SKIP_PYTHONPATH=1
+
+# Build timeout configuration (20 minutes for heavy dependencies)
+SCM_COMMAND_IDLE_TIMEOUT=1200
+SCM_BUILD_TIMEOUT=1200
+
+# Memory optimization for build process
+WEBSITE_MEMORY_LIMIT_MB=1024
+
+# Startup configuration
+WEBSITE_STARTUP_FILE=startup.sh

@@ -1,0 +1,207 @@
+<!-- Search Results Fragment - Used by HTMX -->
+
+{% if error %}
+<!-- Enhanced Error State -->
+<div class="bg-gradient-to-r from-red-50 via-red-100 to-pink-50 border-2 border-red-200 rounded-2xl p-12 text-center shadow-xl animate-slide-up">
+    <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <i class="fas fa-exclamation-triangle text-white text-3xl"></i>
+    </div>
+    <h3 class="text-2xl font-bold text-red-900 mb-4">{{ error }}</h3>
+    <p class="text-lg text-red-700 mb-8 max-w-lg mx-auto">{{ message }}</p>
+    
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button onclick="location.reload()" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-8 py-4 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
+            <i class="fas fa-redo mr-3"></i>
+            Try Again
+        </button>
+        <a href="/api/documents/ui/chat" class="bg-white hover:bg-gray-50 text-red-600 border-2 border-red-200 hover:border-red-300 px-8 py-4 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
+            <i class="fas fa-robot mr-3"></i>
+            Try AI Chat
+        </a>
+    </div>
+</div>
+
+{% elif results %}
+<!-- Enhanced Results Header -->
+<div class="bg-gradient-to-r from-hywel-50 via-blue-50 to-indigo-50 border-2 border-hywel-200 rounded-2xl p-8 mb-8 shadow-xl animate-fade-in">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-hywel-500 to-hywel-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-search text-white text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-hywel-900">
+                    {{ count }} result{{ 's' if count != 1 else '' }} found
+                </p>
+                <p class="text-lg text-hywel-700">for "<span class="font-semibold">{{ query }}</span>"</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="px-4 py-2 bg-white bg-opacity-60 rounded-xl border border-hywel-200 text-sm text-hywel-700 flex items-center">
+                <i class="fas fa-clock mr-2 text-green-500"></i>
+                Search completed
+            </div>
+            <div class="px-4 py-2 bg-white bg-opacity-60 rounded-xl border border-hywel-200 text-sm text-hywel-700 flex items-center">
+                <i class="fas fa-brain mr-2 text-purple-500"></i>
+                AI-powered
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results List -->
+
+{% for citation in results %}
+<div class="bg-white rounded-2xl shadow-xl border border-gray-100 hover:border-hywel-200 p-8 hover:shadow-2xl transition-all duration-300 mb-8 animate-slide-up group" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+    <div class="flex items-start space-x-6">
+        <!-- Enhanced Citation Number -->
+        <div class="flex-shrink-0">
+            <div class="w-16 h-16 bg-gradient-to-br from-hywel-500 to-hywel-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                {{ citation.citation_number }}
+            </div>
+        </div>
+        
+        <!-- Enhanced Content -->
+        <div class="flex-1 min-w-0">
+            <!-- Document Title -->
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-hywel-600 transition-colors leading-tight">
+                <a href="/api/documents/ui/{{ citation.doc_id }}" class="hover:underline">
+                    {{ citation.title or 'Untitled Document' }}
+                </a>
+            </h3>
+            
+            <!-- Enhanced Metadata -->
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+                <div class="flex items-center bg-gradient-to-r from-red-100 to-red-200 px-4 py-2 rounded-xl border border-red-300 shadow-sm">
+                    <i class="fas fa-file-pdf mr-2 text-red-600"></i>
+                    <span class="font-semibold text-red-800">{{ citation.origin_filename or 'N/A' }}</span>
+                </div>
+                <div class="flex items-center bg-gradient-to-r from-blue-100 to-blue-200 px-4 py-2 rounded-xl border border-blue-300 shadow-sm">
+                    <i class="fas fa-file-invoice mr-2 text-blue-600"></i>
+                    <span class="font-semibold text-blue-800">Page {{ citation.page_no }}</span>
+                </div>
+                {% if citation.score %}
+                <div class="flex items-center bg-gradient-to-r from-yellow-100 to-yellow-200 px-4 py-2 rounded-xl border border-yellow-300 shadow-sm">
+                    <i class="fas fa-star mr-2 text-yellow-600"></i>
+                    <span class="font-semibold text-yellow-800">{{ "%.1f"|format(citation.score * 100) }}% match</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Enhanced Snippet -->
+            <div class="bg-gradient-to-r from-hywel-50 via-blue-50 to-indigo-50 rounded-2xl p-6 mb-6 border-l-4 border-hywel-500 shadow-sm">
+                <p class="text-gray-800 leading-relaxed text-lg">{{ citation.snippet }}</p>
+            </div>
+            
+            <!-- Enhanced KPI Tags -->
+            {% if citation.kpi_tags and citation.kpi_tags|length > 0 %}
+            <div class="mb-6 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                <p class="text-sm font-bold text-purple-800 mb-3 flex items-center">
+                    <i class="fas fa-tags mr-2 text-purple-600"></i>
+                    Related Topics:
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in citation.kpi_tags %}
+                    <span class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-200 to-purple-300 text-purple-900 text-sm font-semibold rounded-xl border border-purple-400 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
+                        <i class="fas fa-tag mr-2"></i>
+                        {{ tag }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Enhanced Actions -->
+            <div class="flex flex-wrap items-center gap-4">
+                {% if citation.thumb_url %}
+                <button 
+                    onclick="showCitationPreview('{{ citation.chunk_id }}', '{{ citation.doc_id }}', {{ citation.page_no }}, '{{ citation.thumb_url }}')"
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-hywel-500 to-hywel-600 text-white rounded-xl hover:from-hywel-600 hover:to-hywel-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                >
+                    <i class="fas fa-eye mr-2"></i>
+                    Preview Page
+                </button>
+                {% endif %}
+                <a 
+                    href="/api/documents/ui/{{ citation.doc_id }}"
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                >
+                    <i class="fas fa-external-link-alt mr-2"></i>
+                    View Document
+                </a>
+                <button 
+                    onclick="copyChunkId('{{ citation.chunk_id }}')"
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                >
+                    <i class="fas fa-copy mr-2"></i>
+                    Copy ID
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+<!-- Enhanced No Results State -->
+<div class="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border-2 border-yellow-200 rounded-2xl p-16 text-center shadow-xl animate-slide-up">
+    <div class="w-32 h-32 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+        <i class="fas fa-search text-white text-4xl"></i>
+    </div>
+    <h3 class="text-3xl font-bold text-yellow-900 mb-4">No Results Found</h3>
+    <p class="text-xl text-yellow-800 mb-8 max-w-2xl mx-auto">
+        {% if query %}We couldn't find any documents matching "<span class="font-bold">{{ query }}</span>"{% else %}No search results to display{% endif %}
+    </p>
+    
+    <div class="bg-white bg-opacity-70 rounded-2xl p-8 mb-8 max-w-2xl mx-auto shadow-lg">
+        <h4 class="text-lg font-bold text-yellow-900 mb-6 flex items-center justify-center">
+            <i class="fas fa-lightbulb mr-3 text-yellow-600"></i>
+            Search Tips:
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-500 mt-1 flex-shrink-0"></i>
+                <span class="text-yellow-800">Try different or more general keywords</span>
+            </div>
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-500 mt-1 flex-shrink-0"></i>
+                <span class="text-yellow-800">Check your spelling and try synonyms</span>
+            </div>
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-500 mt-1 flex-shrink-0"></i>
+                <span class="text-yellow-800">Use fewer words for broader results</span>
+            </div>
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-500 mt-1 flex-shrink-0"></i>
+                <span class="text-yellow-800">Try searching for specific topics or concepts</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/api/documents/ui/chat" class="bg-gradient-to-r from-hywel-500 to-hywel-600 hover:from-hywel-600 hover:to-hywel-700 text-white px-8 py-4 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold text-lg">
+            <i class="fas fa-robot mr-3"></i>
+            Try AI Chat Instead
+        </a>
+        <a href="/documents" class="bg-white hover:bg-gray-50 text-hywel-600 border-2 border-hywel-200 hover:border-hywel-300 px-8 py-4 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold text-lg">
+            <i class="fas fa-folder-open mr-3"></i>
+            Browse All Documents
+        </a>
+    </div>
+    
+    <div class="mt-8 flex items-center justify-center space-x-8 text-sm text-yellow-700">
+        <div class="flex items-center">
+            <i class="fas fa-brain mr-2 text-purple-500"></i>
+            AI-Powered Search
+        </div>
+        <div class="flex items-center">
+            <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+            Instant Results
+        </div>
+        <div class="flex items-center">
+            <i class="fas fa-shield-check mr-2 text-green-500"></i>
+            Secure & Private
+        </div>
+    </div>
+</div>
+{% endif %}

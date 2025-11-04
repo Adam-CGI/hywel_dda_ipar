@@ -1,0 +1,81 @@
+# Azure App Service deployment ignore file
+# Excludes files and directories from deployment package
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# IDE and editor files
+.vscode/
+.kiro/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+test-results.xml
+tests/
+pytest.ini
+pytest_performance.ini
+requirements-test.txt
+conftest.py
+
+# Development files
+.env
+.env.template
+Makefile
+QUICKSTART.md
+reference.md
+backlog.md
+architecture-diagram.md
+EPIC_E_SUMMARY.md
+TEST_QUALITY_GUIDE.md
+
+# Logs and data
+logs/
+data/
+*.log
+
+# Deployment artifacts and scripts
+deploy.zip
+deploy_*.ps1
+deploy_*.sh
+DEPLOYMENT_*.md
+.deployment
+.deployignore
+
+# Documentation (keep only essential docs)
+README.md
+
+# Scripts folder (utility scripts not needed in production)
+scripts/
+
+# Cache and temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.cache/
+
+# Documentation (keep only essential)
+README.md
+
+# Scripts (development only)
+scripts/
+
+# GitHub workflows
+.github/

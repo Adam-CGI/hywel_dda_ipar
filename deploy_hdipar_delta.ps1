@@ -76,12 +76,46 @@ az cosmosdb sql database show -g $ResourceGroup -a $Cosmos -n $Db 1>$null 2>$nul
 if ($LASTEXITCODE -ne 0) {
   az cosmosdb sql database create -g $ResourceGroup -a $Cosmos -n $Db | Out-Null
 }
-# Containers
+# Containers with optimized indexing policy
 @("documents","lineage","events","users") | % {
   az cosmosdb sql container show -g $ResourceGroup -a $Cosmos -d $Db -n $_ 1>$null 2>$null
   if ($LASTEXITCODE -ne 0) {
-    az cosmosdb sql container create -g $ResourceGroup -a $Cosmos -d $Db -n $_ --partition-key-path "/id" | Out-Null
+    # Create with optimized indexing for 'documents' container
+    if ($_ -eq "documents") {
+      $IndexingPolicy = @'
+{
+  "indexingMode": "consistent",
+  "automatic": true,
+  "includedPaths": [
+    {"path": "/doc_id/?"},
+    {"path": "/logical_id/?"},
+    {"path": "/created_at/?"},
+    {"path": "/is_deleted/?"},
+    {"path": "/version/?"}
+  ],
+  "excludedPaths": [
+    {"path": "/*"}
+  ]
+}
+'@
+      az cosmosdb sql container create -g $ResourceGroup -a $Cosmos -d $Db -n $_ `
+        --partition-key-path "/id" `
+        --idx "$IndexingPolicy" | Out-Null
+    } else {
+      # Standard indexing for other containers
+      az cosmosdb sql container create -g $ResourceGroup -a $Cosmos -d $Db -n $_ --partition-key-path "/id" | Out-Null
+    }
   }
+}
+
+# ---- App Service Plan ----
+az resource show -g $ResourceGroup -n $WebPlan --resource-type "Microsoft.Web/serverfarms" 1>$null 2>$null
+if ($LASTEXITCODE -ne 0) {
+  # Create with S1 (Standard) tier for better performance
+  # S1: 1 core, 1.75GB RAM, ~$70/month - good for dev/staging
+  # For production, consider P1V3: 2 cores, 8GB RAM, ~$150/month
+  Write-Host "Creating App Service Plan with S1 tier..."
+  az appservice plan create -g $ResourceGroup -n $WebPlan -l $Location --sku S1 --is-linux | Out-Null
 }
 
 # ---- Web App (Python 3.11) ----
@@ -90,6 +124,21 @@ if ($LASTEXITCODE -ne 0) {
   az webapp create -g $ResourceGroup -p $WebPlan -n $Web --runtime "PYTHON|3.11" | Out-Null
 }
 
+# ---- Configure App Service for better performance ----
+Write-Host "Configuring App Service settings..."
+az webapp config set -g $ResourceGroup -n $Web `
+  --always-on true `
+  --http20-enabled true `
+  --min-tls-version 1.2 | Out-Null
+
+# Set environment variables for production optimization
+az webapp config appsettings set -g $ResourceGroup -n $Web --settings `
+  WEBSITES_ENABLE_APP_SERVICE_STORAGE=false `
+  WEBSITES_PORT=8000 `
+  SCM_DO_BUILD_DURING_DEPLOYMENT=true `
+  ENABLE_ORYX_BUILD=true `
+  PYTHON_ENABLE_GUNICORN_MULTIWORKERS=true | Out-Null
+
 # ---- App Insights setting ----
 $Conn = az monitor app-insights component show -g $ResourceGroup -a $AppI --query connectionString -o tsv
 if ($Conn) { az webapp config appsettings set -g $ResourceGroup -n $Web --settings APPLICATIONINSIGHTS_CONNECTION_STRING="$Conn" | Out-Null }
@@ -97,6 +146,7 @@ if ($Conn) { az webapp config appsettings set -g $ResourceGroup -n $Web --settin
 # ---- Azure OpenAI embedding deployment ----
 az cognitiveservices account deployment show -g $ResourceGroup -n $AOAI --deployment-name $EmbName 1>$null 2>$null
 if ($LASTEXITCODE -ne 0) {
+  Write-Host "Creating embedding deployment with 120 TPM capacity..."
   az cognitiveservices account deployment create `
     -g $ResourceGroup -n $AOAI `
     --deployment-name $EmbName `
@@ -104,7 +154,18 @@ if ($LASTEXITCODE -ne 0) {
     --model-name $EmbName `
     --model-version "latest" `
     --sku-name "Standard" `
-    --sku-capacity 1 | Out-Null
+    --sku-capacity 120 | Out-Null
+} else {
+  # Update existing deployment capacity
+  Write-Host "Updating embedding deployment capacity to 120 TPM..."
+  az cognitiveservices account deployment create `
+    -g $ResourceGroup -n $AOAI `
+    --deployment-name $EmbName `
+    --model-format OpenAI `
+    --model-name $EmbName `
+    --model-version "latest" `
+    --sku-name "Standard" `
+    --sku-capacity 120 | Out-Null
 }
 
 # ---- Azure AI Search index ----
