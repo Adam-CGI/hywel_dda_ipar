@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 # Now import the search service
-from app.services.search_service import SearchService
+from flask_app.services.search_service import SearchService
 
 
 def test_hybrid_search():

@@ -1,0 +1,1 @@
+from flask_app.services.extraction_service import *  # noqa

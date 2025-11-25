@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Load environment variables
 load_dotenv()
 
-from app.services.cosmos_service import CosmosService
-from app.services.search_service import SearchService
-from app.services.search_index_service import SearchIndexService
+from flask_app.services.cosmos_service import CosmosService
+from flask_app.services.search_service import SearchService
+from flask_app.services.search_index_service import SearchIndexService
 
 def main():
     print("\n" + "="*80)

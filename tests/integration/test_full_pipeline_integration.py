@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import json
 
-from app.services.indexing_pipeline_service import IndexingPipelineService
+from flask_app.services.indexing_pipeline_service import IndexingPipelineService
 
 
 class TestDocumentProcessingPipeline:

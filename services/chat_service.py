@@ -1,0 +1,1 @@
+from flask_app.services.chat_service import *  # noqa

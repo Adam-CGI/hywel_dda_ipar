@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
-from app.services.cosmos_service import CosmosService
+from flask_app.services.cosmos_service import CosmosService
 
 
 class TestSaveDocument:

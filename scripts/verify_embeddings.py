@@ -8,9 +8,9 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.embedding_service import EmbeddingService
-from app.services.search_service import SearchService
-from app.services.search_index_service import SearchIndexService
+from flask_app.services.embedding_service import EmbeddingService
+from flask_app.services.search_service import SearchService
+from flask_app.services.search_index_service import SearchIndexService
 
 
 def verify_embedding_service():
@@ -124,7 +124,7 @@ def verify_hybrid_search_code():
     print("=" * 60)
     
     import inspect
-    from app.services.search_service import SearchService
+    from flask_app.services.search_service import SearchService
     
     # Get the search method source code
     search_method = SearchService.search

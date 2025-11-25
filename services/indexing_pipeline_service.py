@@ -1,0 +1,1 @@
+from flask_app.services.indexing_pipeline_service import *  # noqa

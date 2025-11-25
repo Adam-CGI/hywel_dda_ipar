@@ -1,0 +1,1 @@
+from flask_app.services.search_service import *  # noqa

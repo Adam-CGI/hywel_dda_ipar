@@ -1,3 +1,12 @@
+# Basic gitignore additions (low risk) to prevent accidental secret leakage.
+.env
+CREDENTIALS.md
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.coverage
+*.log
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

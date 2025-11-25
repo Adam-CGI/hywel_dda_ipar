@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import json
 
-from app.services.search_service import SearchService
+from flask_app.services.search_service import SearchService
 
 
 class TestSearchService:

@@ -10,7 +10,7 @@ sys.path.insert(0, str(project_root))
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.services.search_index_service import SearchIndexService
+from flask_app.services.search_index_service import SearchIndexService
 
 def main():
     print("Deleting and recreating Azure AI Search index...")

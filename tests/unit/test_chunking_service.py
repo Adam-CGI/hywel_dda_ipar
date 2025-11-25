@@ -2,7 +2,7 @@
 Unit tests for ChunkingService
 Tests deterministic chunking, chunk ID generation, and page offset tracking.
 """
-from app.services.chunking_service import ChunkingService
+from flask_app.services.chunking_service import ChunkingService
 
 
 class TestGenerateChunkId:

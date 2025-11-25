@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, MagicMock, call
 from datetime import datetime, timedelta
 import hashlib
 
-from app.services.storage_service import StorageService
+from flask_app.services.storage_service import StorageService
 
 
 class TestComputeSha256:

@@ -5,7 +5,7 @@ Tests RAG-powered chat functionality, prompt engineering, and citation generatio
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from app.services.chat_service import ChatService
+from flask_app.services.chat_service import ChatService
 
 
 class TestChatService:

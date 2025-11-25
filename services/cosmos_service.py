@@ -1,0 +1,1 @@
+from flask_app.services.cosmos_service import *  # noqa

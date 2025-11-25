@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.services.cosmos_service import CosmosService
-from app.services.search_service import SearchService
+from flask_app.services.cosmos_service import CosmosService
+from flask_app.services.search_service import SearchService
 
 print("\n" + "="*80)
 print("CHECKING UPLOAD AND INDEXING STATUS")

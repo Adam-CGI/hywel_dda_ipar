@@ -1,0 +1,1 @@
+from flask_app.services.embedding_service import *  # noqa

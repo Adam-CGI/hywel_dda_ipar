@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}About – {{ brand_name }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .about-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .about-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 3px solid #005EB8;
+  }
+  
+  .about-header .badge {
+    display: inline-block;
+    background: #005EB8;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+  
+  .about-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #003087;
+    margin: 1rem 0 0.5rem;
+    line-height: 1.2;
+  }
+  
+  .about-header .subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  
+  .content-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #005EB8;
+  }
+  
+  .content-section h2 {
+    color: #003087;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 1.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .content-section h2 i {
+    color: #005EB8;
+    font-size: 1.5rem;
+  }
+  
+  .content-section h3 {
+    color: #005EB8;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem 0;
+  }
+  
+  .content-section p {
+    color: #475569;
+    line-height: 1.75;
+    margin-bottom: 1rem;
+  }
+  
+  .content-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 1rem 0;
+  }
+  
+  .content-section ul li {
+    padding-left: 1.75rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+    color: #475569;
+    line-height: 1.6;
+  }
+  
+  .content-section ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0.5rem;
+    color: #005EB8;
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+  
+  .feature-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .feature-box h3 {
+    color: #003087;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .feature-box p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.6;
+  }
+  
+  .callout {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .callout p {
+    margin: 0;
+    color: #1e40af;
+    font-weight: 500;
+  }
+  
+  .footer-note {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-page">
+  <div class="about-header">
+    <span class="badge">PILOT SYSTEM</span>
+    <h1>{{ brand_name }}</h1>
+    <p class="subtitle">{{ brand_tagline }}</p>
+  </div>
+
+  <!-- Overview -->
+  <div class="content-section">
+    <h2><i class="fas fa-info-circle"></i>Overview</h2>
+    {{ about_sections.get('overview', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- What This System Does -->
+  <div class="content-section">
+    <h2><i class="fas fa-check-circle"></i>What This System Does</h2>
+    {{ about_sections.get('what_this_system_does', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- What This System Is Not -->
+  <div class="content-section">
+    <h2><i class="fas fa-times-circle"></i>What This System Is Not</h2>
+    {{ about_sections.get('what_this_system_is_not', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- Current Phase -->
+  <div class="content-section">
+    <h2><i class="fas fa-flask"></i>Current Phase: Pilot Evaluation</h2>
+    {{ about_sections.get('current_phase_pilot_evaluation', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- Moving Toward Production -->
+  <div class="content-section">
+    <h2><i class="fas fa-rocket"></i>Moving Toward Production</h2>
+    {{ about_sections.get('moving_toward_production', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- Data Security & Governance -->
+  <div class="content-section">
+    <h2><i class="fas fa-shield-alt"></i>Data Security & Governance</h2>
+    {{ about_sections.get('data_security__governance', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- How to Provide Feedback -->
+  <div class="content-section">
+    <h2><i class="fas fa-comment-dots"></i>How to Provide Feedback</h2>
+    {{ about_sections.get('how_to_provide_feedback', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <div class="footer-note">
+    <p><em>This is a pilot system under active development. Capabilities and features are subject to change.</em></p>
+  </div>
+</div>
+{% endblock %}
+

@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import json
 
-from app.services.chat_service import ChatService
+from flask_app.services.chat_service import ChatService
 
 
 class TestRAGChatIntegration:

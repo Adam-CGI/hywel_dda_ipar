@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import numpy as np
 
-from app.services.embedding_service import EmbeddingService
+from flask_app.services.embedding_service import EmbeddingService
 
 
 class TestEmbedTexts:

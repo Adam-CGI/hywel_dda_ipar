@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.services.search_service import SearchService
-from app.services.chat_service import ChatService
+from flask_app.services.search_service import SearchService
+from flask_app.services.chat_service import ChatService
 
 print("\n" + "="*80)
 print("TESTING SEARCH AND CHAT")

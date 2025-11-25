@@ -8,12 +8,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.services.storage_service import StorageService
-from app.services.extraction_service import ExtractionService
-from app.services.cosmos_service import CosmosService
-from app.services.embedding_service import EmbeddingService
-from app.services.search_index_service import SearchIndexService
-from app.services.chunking_service import ChunkingService
+from flask_app.services.storage_service import StorageService
+from flask_app.services.extraction_service import ExtractionService
+from flask_app.services.cosmos_service import CosmosService
+from flask_app.services.embedding_service import EmbeddingService
+from flask_app.services.search_index_service import SearchIndexService
+from flask_app.services.chunking_service import ChunkingService
 from datetime import datetime
 
 print("\n" + "="*80)

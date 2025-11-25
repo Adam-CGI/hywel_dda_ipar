@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import Image
 import json
 
-from app.services.extraction_service import ExtractionService
+from flask_app.services.extraction_service import ExtractionService
 
 
 class TestExtractDocument:
