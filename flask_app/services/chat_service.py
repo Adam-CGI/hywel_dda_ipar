@@ -41,7 +41,7 @@ FORMAT YOUR RESPONSE:
 - Use inline citations [Doc X] after every factual statement
 - Use bullet points for lists
 - Keep paragraphs short and scannable
-- End with "Sources:" section listing all cited documents with their titles and page numbers"""
+- Do NOT add a sources section at the end - sources will be displayed separately"""
 
     # Few-shot examples to guide model behavior
     FEW_SHOT_EXAMPLES = [
@@ -56,11 +56,7 @@ FORMAT YOUR RESPONSE:
 - **Emergency department waiting times** - targeting 95% of patients seen within 4 hours [Doc 1]
 - **Cancer treatment pathways** - ensuring 75% of patients start treatment within 62 days of referral [Doc 1]
 - **Infection control rates** - monitoring hospital-acquired infections like C. difficile and MRSA [Doc 2]
-- **Financial performance** - tracking budget variance and cost improvement programmes [Doc 2]
-
-Sources:
-- [Doc 1] M12 2024-25 IPAR Overview, Page 3
-- [Doc 2] M12 2024-25 IPAR Overview, Page 7"""
+- **Financial performance** - tracking budget variance and cost improvement programmes [Doc 2]"""
         }
     ]
     

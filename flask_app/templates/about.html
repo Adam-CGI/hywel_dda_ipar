@@ -152,6 +152,53 @@
     color: #1e293b;
     font-weight: 600;
   }
+
+  /* Additional styling for markdown-generated content */
+  .content-section h3:first-child {
+    margin-top: 0;
+  }
+
+  .content-section h4 {
+    color: #475569;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem 0;
+  }
+
+  /* Ensure proper spacing for nested lists and paragraphs */
+  .content-section ul ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .content-section p + ul,
+  .content-section h3 + ul,
+  .content-section h4 + ul {
+    margin-top: 0.75rem;
+  }
+
+  .content-section p + p {
+    margin-top: 1rem;
+  }
+
+  /* Handle bold text within paragraphs */
+  .content-section p strong:first-child {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Prevent layout breaks */
+  .content-section * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Fix any floating issues */
+  .content-section::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
 </style>
 {% endblock %}
 
@@ -203,6 +250,18 @@
   <div class="content-section">
     <h2><i class="fas fa-comment-dots"></i>How to Provide Feedback</h2>
     {{ about_sections.get('how_to_provide_feedback', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- System Capabilities -->
+  <div class="content-section">
+    <h2><i class="fas fa-star"></i>System Capabilities: What to Explore</h2>
+    {{ about_sections.get('system_capabilities_what_to_explore', '<p>Content not available</p>')|safe }}
+  </div>
+
+  <!-- Future Development -->
+  <div class="content-section">
+    <h2><i class="fas fa-road"></i>Future Development: Planned Enhancements</h2>
+    {{ about_sections.get('future_development_planned_enhancements', '<p>Content not available</p>')|safe }}
   </div>
 
   <div class="footer-note">

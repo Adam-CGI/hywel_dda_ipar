@@ -2,160 +2,175 @@
 
 ## Project Overview
 
-This is a Flask-based RAG (Retrieval-Augmented Generation) application for processing NHS IPAR documents. The system ingests PDFs, extracts text, creates vector embeddings, and enables semantic search with page-level citations.
+Flask-based RAG system for NHS IPAR documents. Ingests PDFs, extracts text with Azure Document Intelligence, chunks with LlamaIndex, embeds with Azure OpenAI (text-embedding-3-large, 3072-dim), and indexes in Azure AI Search for hybrid search + page-level citations.
 
-## Core Architecture
+## Critical Architecture Decisions
 
-### Service-Oriented Architecture
-- **Routes Layer**: `app/routes/documents.py` - Single blueprint (`documents_bp`) handling all document operations
-- **Service Layer**: `app/services/` - Each Azure service wrapped in dedicated service classes
-- **Pipeline Pattern**: `IndexingPipelineService` orchestrates: extract → chunk → embed → index
-- **Template Layer**: HTMX + Tailwind CSS for dynamic UI without JavaScript, base template provides navigation
+### Directory Structure with Shim Pattern (IMPORTANT!)
+**Single Flask app in `flask_app/` with root-level shims for backward compatibility:**
 
-### Key Data Flow
-1. PDF upload → SHA256 doc_id generation (exact duplicate detection)
-2. Azure Document Intelligence extraction → text + page thumbnails  
-3. LlamaIndex chunking with deterministic chunk_ids
-4. Azure OpenAI embeddings (text-embedding-3-large, 3072 dimensions)
-5. Azure AI Search indexing with hybrid search (vector + keyword)
-
-### Critical Identifiers
-```python
-doc_id = sha256(file_bytes)  # Exact duplicate detection
-logical_id = sha256(normalized_text)  # Content-based duplicate detection  
-chunk_id = sha256(doc_id + page_no + start_offset + text[:256])  # Deterministic chunking
 ```
+flask_app/ (PRIMARY - all business logic lives here):
+├── application.py       # WSGI entry (Azure auto-detects)
+├── config.py            # Azure clients & env config
+├── services/            # Business logic (relative imports: from services.x import)
+├── routes/              # Flask blueprints
+└── templates/           # HTMX + Tailwind templates
+
+Root shims (for test/script compatibility):
+├── config.py            # Re-exports from flask_app.config
+├── services/            # Re-exports from flask_app.services/*
+└── run.py               # Dev entry (imports from app, which doesn't exist - broken)
+```
+
+**Import patterns by location:**
+- **`flask_app/`**: Relative imports (`from services.x import Y`, `from config import Z`)
+- **`scripts/`**: Full path (`from flask_app.services.x import Y`)
+- **`tests/`**: Legacy imports (`from app.services.x import Y`) - requires `services/` shims
+
+**When editing code:** Always edit files in `flask_app/`. Root `services/` files are shims only.
+
+### Service-Oriented Pipeline Pattern
+- **Routes** (`flask_app/routes/documents.py`): Module-level service instantiation (singleton pattern)
+```python
+storage_service = StorageService()  # Instantiated once at module load
+extraction_service = ExtractionService()
+```
+- **Services** (`flask_app/services/`): Each wraps one Azure SDK, initialized with client factories from `config.py`
+- **Orchestration**: `IndexingPipelineService` chains: extract → chunk → embed → index
+- **Temporal Metadata**: `DateParserService` extracts date from filenames (pattern: `_DD-MM-YY.pdf`)
+- **Error Handling**: Services return `{"success": bool, "error": str, ...}` dicts, pipeline logs failures but continues
+
+### Deterministic Identifiers (Critical for Deduplication)
+```python
+doc_id = sha256(file_bytes)  # Exact duplicate detection (file-level)
+logical_id = sha256(normalized_text)  # Content duplicate (ignores whitespace)
+chunk_id = sha256(doc_id + page_no + start_offset + text[:256])  # Reproducible chunking
+```
+**Why:** Enables idempotent reprocessing, version tracking, and duplicate detection without Cosmos queries
 
 ## Development Workflows
 
-### Local Development
-```bash
-# Standard workflow
-make install  # pip install -r requirements.txt
-make run      # python app.py (runs on port 8000)
-make test     # pytest tests/ -v
+### Local Development (Windows PowerShell)
+```powershell
+# Setup
+cd flask_app  # Always work from flask_app/ for deployment-ready code
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env  # Configure Azure connection strings (15+ required)
 
-# Document testing  
-make upload FILE=path/to/test.pdf  # Curl-based upload test
+# Run locally (development server)
+python application.py  # Runs on port 8000, auto-reload enabled
+
+# Run with production server (Gunicorn - Linux/WSL only)
+gunicorn --bind=0.0.0.0:8000 --timeout 600 application:app
 ```
 
-### Environment Setup
-- Copy `.env` template with 15+ Azure service connection strings
-- All Azure clients initialized in `app/config.py` with get_*_client() factory methods
-- Required: Storage, Search, OpenAI, Document Intelligence, Cosmos DB connection strings
-- **Python 3.11+** required; recommend virtual environment setup:
-  ```bash
-  python -m venv .venv
-  .venv\Scripts\activate  # Windows
-  ```
+### Testing Strategy
+```powershell
+# From repository root (NOT flask_app/)
+# Tests import from app.services.* which uses root shims → flask_app.services
 
-### Testing Patterns
-- **Epic-based tests**: `test_epic_b.py` (ingestion), `test_epic_c.py` (chunking/embeddings)
-- **Integration verification**: Scripts in `scripts/` verify live Azure service connections
-- **Determinism testing**: Chunking and embedding reproducibility validation
-- **Coverage**: Run with `pytest tests/ -v --cov=app` for coverage reporting
-- **All tests cover EPICs A-G**: Each feature group has dedicated test file
+pytest tests/test_epic_b.py -v  # Ingestion pipeline (integration - hits API)
+pytest tests/test_epic_c.py -v  # Chunking & embeddings (unit tests)
+pytest tests/test_epic_f.py -v  # Hybrid search
+pytest tests/test_epic_g.py -v  # RAG chat with citations
+
+# Note: pytest.ini has --cov=app but app/ doesn't exist - coverage will fail
+# Use --no-cov for quick runs:
+pytest tests/test_epic_c.py -v --no-cov
+```
+
+**Test patterns:**
+- Tests use `from app.services.*` imports (resolved via root `services/` shims)
+- Use `@pytest.mark.integration` for Azure service tests
+- Epic-based test files map to feature requirements (EPIC B-G)
+
+### Debugging & Verification Scripts
+Located in `scripts/`, import from `flask_app.services`:
+```powershell
+python scripts/verify_embeddings.py        # Test embedding generation + search connectivity
+python scripts/verify_indexed_vectors.py   # Validate search index vector storage
+python scripts/test_hybrid_search.py       # End-to-end search test
+python scripts/debug_upload.py             # Debug document upload pipeline
+python scripts/recreate_index.py           # Recreate search index from scratch
+python scripts/test_temporal_queries.py    # Test date-based filtering
+```
 
 ## Azure Services Integration
 
+### Required Environment Variables (~15)
+See `flask_app/.env.example` for full list. Key groups:
+- **Storage**: `AZURE_STORAGE_CONNSTR`, containers: raw/extracted/thumbs/manifests/archive
+- **AI Search**: `AZURE_SEARCH_ENDPOINT`, `AZURE_SEARCH_ADMIN_KEY`, index: `ipar-chunks`
+- **OpenAI**: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, deployments: `text-embedding-3-large`, `gpt-4o-mini`
+- **Document Intelligence**: `AZURE_DOCINTEL_ENDPOINT`, `AZURE_DOCINTEL_KEY`
+- **Cosmos DB**: `COSMOS_ENDPOINT`, `COSMOS_KEY`, database: `ipar`
+
 ### Storage Containers (sthdipardev)
 ```
-raw/          # Original PDFs (SHA256 named)
+raw/          # Original PDFs (SHA256-named)
 extracted/    # Document Intelligence JSON output  
-thumbs/       # Page thumbnails for citations
+thumbs/       # Page thumbnails (doc_id/pN.png)
 manifests/    # Processing metadata
-archive/      # Deleted document archive
+archive/      # Soft-deleted documents
 ```
 
-### Cosmos DB Collections (ipar database)
-- `documents` - Document metadata and lineage tracking
-- `events` - Processing audit trail
-- `lineage` - Document version relationships  
-- `users` - User access control (future)
+### Cosmos DB Schema (ipar database)
+- `documents` - Document metadata + lineage (partition key: `doc_id`)
+- `events` - Processing audit trail (partition key: `doc_id`)
+- `lineage` - Version relationships (partition key: `logical_id`)
 
 ### Search Index Schema (ipar-chunks)
-- Vector field: 3072-dimension embeddings with HNSW profile "veconf"
-- Filterable: doc_id, logical_id, version, page_no
-- Searchable: title, origin_filename, text content
+- **Vector field**: 3072-dim embeddings, HNSW profile "veconf"
+- **Filterable**: `doc_id`, `logical_id`, `page_no`, `year`, `quarter`, `fiscal_year`
+- **Temporal**: `document_date`, `year`, `month`, `quarter`, `fiscal_year` (extracted from filename)
 
 ## Project-Specific Conventions
 
-### Directory Organization
-```
-app/
-├── config.py          # Azure client factories & environment config
-├── routes/            # Flask blueprints (currently documents_bp only)
-├── services/          # Business logic layer (one service per Azure service)
-├── templates/         # HTMX templates with base.html navigation
-└── models/            # Data models (currently empty)
-```
-
-### Naming Conventions
-- **Files**: snake_case, services end with `_service.py`, tests start with `test_`
-- **Azure Resources**: `{service}-hdipar-{env}` pattern (e.g., `ais-hdipar-dev`)
-- **Variables**: snake_case for Python, UPPER_CASE for environment variables
-
-### Service Initialization Pattern
+### Service Pattern
 ```python
-# In routes - services instantiated at module level
-storage_service = StorageService()
-extraction_service = ExtractionService()
-# All services follow this pattern for singleton-like behavior
+# Each service wraps ONE Azure SDK
+class StorageService:
+    def __init__(self):
+        self.blob_client = get_blob_service_client()  # from config.py
+
+# Services return dict responses
+def upload_to_raw(...) -> dict:
+    return {"success": True, "doc_id": "...", "blob_url": "..."}
+    # or: {"success": False, "error": "reason"}
 ```
 
-### Error Handling Convention
-- Services return structured dicts with success/error status
-- Pipeline failures logged but don't halt processing completely
-- Cosmos events track all processing attempts for debugging
+### RAG Chat Implementation
+`ChatService` (flask_app/services/chat_service.py) implements RAG with:
+- System prompt enforcing source-only responses
+- Inline citations format: `[Doc 1]`, `[Doc 2, Doc 3]`
+- Few-shot examples for consistent output
+- Never adds sources section (UI displays separately)
 
-### Hybrid Search Implementation
-- `SearchService.hybrid_search()` combines vector and keyword search
-- Results include page-level citations with thumbnail links
-- Chat service (`ChatService`) implements RAG with strict source citation requirements
+### HTMX Frontend
+- `templates/base.html`: 3000+ line file with Tailwind CSS, animations, all styling
+- Dynamic updates via HTMX attributes, minimal JavaScript
+- Partial templates for AJAX updates (e.g., `document_table_rows.html`)
 
-### HTMX Frontend Pattern
-- **Base Template**: `templates/base.html` provides navigation and Tailwind CSS
-- **Dynamic Updates**: HTMX handles UI updates without JavaScript
-- **Partial Templates**: `document_table_rows.html` for dynamic content updates
-- **Target Deployment**: Azure App Service Linux B1 tier
+## Key Files
 
-## Key Debugging Points
+| Purpose | File |
+|---------|------|
+| App entry (Azure) | `flask_app/application.py` |
+| Azure clients | `flask_app/config.py` |
+| Upload pipeline | `flask_app/routes/documents.py` |
+| Orchestration | `flask_app/services/indexing_pipeline_service.py` |
+| Hybrid search | `flask_app/services/search_service.py` |
+| RAG chat | `flask_app/services/chat_service.py` |
+| Date parsing | `flask_app/services/date_parser_service.py` |
 
-### Common Issues
-- **Embedding dimension mismatches**: Verify 3072-dim vectors (text-embedding-3-large)
-- **Search index creation**: Index auto-created on first upload, check `SearchIndexService.create_index()`
-- **Duplicate detection**: Both exact (file hash) and logical (content hash) systems in play
+## Technology Stack
 
-### Verification Scripts
-- `scripts/verify_embeddings.py` - Test embedding generation and search connectivity
-- `scripts/verify_indexed_vectors.py` - Validate search index vector storage
-- `scripts/test_hybrid_search.py` - End-to-end search functionality testing
-- `scripts/debug_upload.py` - Debug document upload issues
-- `scripts/recreate_index.py` - Recreate search index from scratch
+- **Flask 3.0** + Python 3.11+
+- **LlamaIndex** for chunking (512 tokens, 128 overlap)
+- **HTMX 1.9** + Tailwind CSS (no build step)
+- **Azure SDK**: blob storage, cosmos, search, openai, document intelligence
 
-### Deployment
-- PowerShell script: `deploy_hdipar_delta.ps1` provisions full Azure infrastructure
-- Idempotent deployment with resource existence checks
-- App Service deployment uses managed identity for Azure service access
-
-## File Patterns to Know
-
-- **All services**: Instantiate Azure clients in constructor, implement business logic methods
-- **Route handlers**: Minimal logic, delegate to services, return JSON responses  
-- **Templates**: HTMX-based with Tailwind CSS, server-side rendering for document management UI
-- **Configuration**: Environment-driven with sensible defaults (see `app/config.py`)
-
-## Key Technology Stack
-
-### Core Dependencies
-- **Flask 3.0.0** + **Python 3.11+** for web framework
-- **LlamaIndex 0.10.12** for document chunking and processing
-- **HTMX 1.9.10** + **Tailwind CSS** for dynamic frontend without JavaScript
-- **Azure SDK suite**: blob storage, cosmos, search, openai, document intelligence
-
-### Development Tools
-- **pytest** with coverage for testing
-- **Makefile** for standardized commands
-- **PowerShell** deployment scripts for Azure infrastructure provisioning
-
-This is a production healthcare system handling sensitive documents - prioritize data integrity, audit trails, and deterministic processing in all modifications.
+This is a production healthcare system - prioritize data integrity, audit trails, and deterministic processing.

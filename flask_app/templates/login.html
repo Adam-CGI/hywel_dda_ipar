@@ -4,40 +4,215 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - {{ brand_name }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'hywel': {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-center;
+            padding: 1rem;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 28rem;
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
         }
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+        
+        .logo-circle {
+            display: inline-block;
+            background: white;
+            border-radius: 50%;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        .gradient-bg {
+        
+        .logo-icon {
+            font-size: 4rem;
+            color: #0ea5e9;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+        
+        .tagline {
+            color: #e0f2fe;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+        }
+        
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 i {
+            margin-right: 0.75rem;
+            color: #0ea5e9;
+        }
+        
+        .card-description {
+            color: #4b5563;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .error-box {
+            margin-bottom: 1.5rem;
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .error-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-icon {
+            color: #ef4444;
+            margin-right: 0.5rem;
+        }
+        
+        .error-text {
+            color: #b91c1c;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        label i {
+            margin-right: 0.5rem;
+            color: #9ca3af;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        button {
+            width: 100%;
             background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button i {
+            margin-right: 0.5rem;
+        }
+        
+        .footer {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .footer-text i {
+            margin-right: 0.25rem;
+        }
+        
+        .additional-info {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .info-text {
+            color: white;
+            font-size: 0.875rem;
+            opacity: 0.75;
+        }
+        
+        .info-text i {
+            margin-right: 0.25rem;
         }
     </style>
 </head>

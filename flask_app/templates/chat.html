@@ -638,7 +638,50 @@
         font-style: italic;
         color: #4b5563;
     }
-    
+
+    /* Headers in prose */
+    .prose h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 1.5rem 0 1rem 0;
+        line-height: 1.2;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+    }
+
+    .prose h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 1.25rem 0 0.75rem 0;
+        line-height: 1.3;
+    }
+
+    .prose h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #334155;
+        margin: 1rem 0 0.5rem 0;
+        line-height: 1.4;
+    }
+
+    .prose h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #475569;
+        margin: 0.75rem 0 0.5rem 0;
+        line-height: 1.4;
+    }
+
+    /* First header shouldn't have top margin */
+    .prose h1:first-child,
+    .prose h2:first-child,
+    .prose h3:first-child,
+    .prose h4:first-child {
+        margin-top: 0;
+    }
+
     .prose ul {
         margin: 1rem 0;
         padding-left: 0;
@@ -1101,7 +1144,36 @@
             transform: translateY(-4px);
         }
     }
-    
+
+    /* Compact suggestions mode - shown at top of chat after first message */
+    .welcome-message.suggestions-mode {
+        padding: 1rem 1.5rem;
+        margin: 1rem 1rem 0.5rem 1rem;
+        border-radius: 1rem;
+        animation: none;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .welcome-message.suggestions-mode .welcome-icon,
+    .welcome-message.suggestions-mode h3,
+    .welcome-message.suggestions-mode p {
+        display: none;
+    }
+
+    .welcome-message.suggestions-mode .example-queries {
+        margin-top: 0;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .welcome-message.suggestions-mode .example-query {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        border-width: 1px;
+        animation: none;
+        opacity: 1;
+    }
+
     .example-queries {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1192,10 +1264,25 @@
             gap: 0.75rem;
             margin-top: 1.5rem;
         }
-        
+
         .example-query {
             padding: 1rem 1.25rem;
             font-size: 0.95rem;
+        }
+
+        .welcome-message.suggestions-mode {
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0.75rem 0.5rem 0.75rem;
+        }
+
+        .welcome-message.suggestions-mode .example-queries {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .welcome-message.suggestions-mode .example-query {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
         }
         
         .chat-input-area {
@@ -1778,6 +1865,14 @@
             </div>
         </div>
         <div class="flex items-center space-x-4 text-sm text-gray-500">
+            <button
+                onclick="clearChatHistory()"
+                class="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 hover:shadow-md"
+                title="Clear chat history and start fresh"
+            >
+                <i class="fas fa-trash-alt mr-2"></i>
+                Clear Chat
+            </button>
             <div class="status-indicator status-online" id="chat-status">
                 <div class="status-dot"></div>
                 <span id="chat-status-text">Online</span>
@@ -1953,6 +2048,142 @@
 <script>
     // Conversation history for multi-turn chat
     let conversationHistory = [];
+
+    // Chat persistence key
+    const CHAT_STORAGE_KEY = 'ipar_chat_history';
+    const CHAT_MESSAGES_KEY = 'ipar_chat_messages';
+
+    // Save chat history to localStorage
+    function saveChatHistory() {
+        try {
+            localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(conversationHistory));
+        } catch (e) {
+            console.warn('Failed to save chat history:', e);
+        }
+    }
+
+    // Load chat history from localStorage
+    function loadChatHistory() {
+        try {
+            const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+            if (saved) {
+                conversationHistory = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.warn('Failed to load chat history:', e);
+            conversationHistory = [];
+        }
+    }
+
+    // Save chat messages UI state
+    function saveChatMessages() {
+        try {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messages = [];
+
+            // Extract all user and assistant messages
+            messagesDiv.querySelectorAll('.message').forEach(msg => {
+                if (msg.classList.contains('message-user')) {
+                    const content = msg.querySelector('.message-content');
+                    if (content) {
+                        messages.push({
+                            type: 'user',
+                            content: content.textContent.trim()
+                        });
+                    }
+                } else if (msg.classList.contains('message-assistant') && !msg.classList.contains('skeleton-message')) {
+                    const content = msg.querySelector('.message-content');
+                    if (content) {
+                        // Store full HTML to preserve formatting and citations
+                        messages.push({
+                            type: 'assistant',
+                            html: content.innerHTML
+                        });
+                    }
+                }
+            });
+
+            localStorage.setItem(CHAT_MESSAGES_KEY, JSON.stringify(messages));
+        } catch (e) {
+            console.warn('Failed to save chat messages:', e);
+        }
+    }
+
+    // Load and restore chat messages UI
+    function restoreChatMessages() {
+        try {
+            const saved = localStorage.getItem(CHAT_MESSAGES_KEY);
+            if (!saved) return false;
+
+            const messages = JSON.parse(saved);
+            if (!messages || messages.length === 0) return false;
+
+            const messagesDiv = document.getElementById('chat-messages');
+            const welcomeMessage = document.getElementById('welcome-message');
+
+            // Hide welcome message and switch to suggestions mode
+            if (welcomeMessage && !welcomeMessage.classList.contains('suggestions-mode')) {
+                welcomeMessage.classList.add('suggestions-mode');
+            }
+
+            // Restore each message
+            messages.forEach(msg => {
+                if (msg.type === 'user') {
+                    addUserMessage(msg.content, false); // Don't scroll yet
+                } else if (msg.type === 'assistant') {
+                    // Create assistant message div
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-assistant';
+                    messageDiv.innerHTML = `
+                        <div class="message-label">
+                            <div class="avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <span>AI Assistant</span>
+                        </div>
+                        <div class="message-content">${msg.html}</div>
+                    `;
+                    messagesDiv.appendChild(messageDiv);
+
+                    // Add animation
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        messageDiv.style.transform = 'translateX(-20px)';
+                        requestAnimationFrame(() => {
+                            messageDiv.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                            messageDiv.style.opacity = '1';
+                            messageDiv.style.transform = 'translateX(0)';
+                        });
+                    }, 10);
+                }
+            });
+
+            // Scroll to bottom after restoring
+            setTimeout(() => scrollToBottom(), 100);
+
+            return true;
+        } catch (e) {
+            console.warn('Failed to restore chat messages:', e);
+            return false;
+        }
+    }
+
+    // Clear chat history
+    function clearChatHistory() {
+        conversationHistory = [];
+        localStorage.removeItem(CHAT_STORAGE_KEY);
+        localStorage.removeItem(CHAT_MESSAGES_KEY);
+
+        // Clear UI
+        const messagesDiv = document.getElementById('chat-messages');
+        messagesDiv.querySelectorAll('.message').forEach(msg => msg.remove());
+
+        // Show welcome message again
+        const welcomeMessage = document.getElementById('welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.classList.remove('suggestions-mode');
+        }
+    }
     
     // Handle form submission
     async function handleChatSubmit(event) {
@@ -1964,8 +2195,11 @@
             return;
         }
         
-        // Hide welcome message
-        document.getElementById('welcome-message').style.display = 'none';
+        // Transform welcome message to compact suggestions view
+        const welcomeMessage = document.getElementById('welcome-message');
+        if (!welcomeMessage.classList.contains('suggestions-mode')) {
+            welcomeMessage.classList.add('suggestions-mode');
+        }
         
         // Add user message to chat
         addUserMessage(query);
@@ -2036,7 +2270,13 @@
             
             if (response.ok) {
                 const data = await response.json();
-                
+
+                // Remove skeleton message before adding real message
+                const skeletonMessage = document.querySelector('.skeleton-message');
+                if (skeletonMessage) {
+                    skeletonMessage.remove();
+                }
+
                 // Add assistant message
                 addAssistantMessage(data);
                 
@@ -2064,11 +2304,15 @@
                     role: 'assistant',
                     content: data.response
                 });
-                
+
                 // Keep only last 10 messages (5 turns)
                 if (conversationHistory.length > 10) {
                     conversationHistory = conversationHistory.slice(-10);
                 }
+
+                // Persist chat history and messages to localStorage
+                saveChatHistory();
+                saveChatMessages();
             } else {
                 // Handle specific error responses
                 let errorMessage = 'Sorry, something went wrong. Please try again.';
@@ -2124,12 +2368,10 @@
                 }
             ]);
         } finally {
-            // Remove skeleton message
+            // Remove skeleton message if still present (in case of error)
             const skeletonMessage = document.querySelector('.skeleton-message');
             if (skeletonMessage) {
-                skeletonMessage.style.opacity = '0';
-                skeletonMessage.style.transform = 'translateY(-10px)';
-                setTimeout(() => skeletonMessage.remove(), 300);
+                skeletonMessage.remove();
             }
             
             // Hide typing indicator
@@ -2146,16 +2388,15 @@
             
             // Re-enable input
             document.getElementById('chat-input').disabled = false;
-            
+
             // Focus input
             document.getElementById('chat-input').focus();
-            
-            // Scroll to bottom
-            scrollToBottom();
+
+            // Note: Scrolling is handled by addAssistantMessage to scroll to start of answer
         }
     }
     
-    function addUserMessage(text) {
+    function addUserMessage(text, shouldScroll = true) {
         const messagesDiv = document.getElementById('chat-messages');
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message message-user';
@@ -2171,13 +2412,17 @@
             <div class="message-content">${escapeHtml(text)}</div>
         `;
         messagesDiv.appendChild(messageDiv);
-        
+
         // Animate in with enhanced timing
         requestAnimationFrame(() => {
             messageDiv.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
             messageDiv.style.opacity = '1';
             messageDiv.style.transform = 'translateY(0) scale(1)';
         });
+
+        if (shouldScroll) {
+            setTimeout(() => scrollToBottom(), 100);
+        }
     }
     
     function addAssistantMessage(response) {
@@ -2266,20 +2511,25 @@
             </div>
         `;
         messagesDiv.appendChild(messageDiv);
-        
+
         // Animate in with staggered timing for better visual flow
         requestAnimationFrame(() => {
             messageDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
             messageDiv.style.opacity = '1';
             messageDiv.style.transform = 'translateY(0) scale(1)';
-            
+
+            // Scroll to the start of this message (not to bottom with sources)
+            setTimeout(() => {
+                scrollToMessage(messageDiv);
+            }, 100);
+
             // Animate citation chips with delay
             setTimeout(() => {
                 const citationChips = messageDiv.querySelectorAll('.citation-chip');
                 citationChips.forEach((chip, index) => {
                     chip.style.opacity = '0';
                     chip.style.transform = 'translateY(10px) scale(0.9)';
-                    
+
                     setTimeout(() => {
                         chip.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                         chip.style.opacity = '1';
@@ -2288,6 +2538,8 @@
                 });
             }, 200);
         });
+
+        return messageDiv;
     }
     
     function addErrorMessage(text, suggestions = []) {
@@ -2333,14 +2585,24 @@
             </div>
         `;
         messagesDiv.appendChild(messageDiv);
+
+        // Scroll to the error message
+        setTimeout(() => {
+            scrollToMessage(messageDiv);
+        }, 100);
     }
     
     function formatResponseWithCitations(text, sources) {
         // First, escape HTML to prevent XSS, but preserve our formatting
         let formattedText = text;
-        
+
         // Handle markdown formatting
         formattedText = formattedText
+            // Headers - process before other formatting
+            .replace(/^#### (.*?)$/gm, '<h4>$1</h4>')  // #### Header 4
+            .replace(/^### (.*?)$/gm, '<h3>$1</h3>')   // ### Header 3
+            .replace(/^## (.*?)$/gm, '<h2>$1</h2>')    // ## Header 2
+            .replace(/^# (.*?)$/gm, '<h1>$1</h1>')     // # Header 1
             // Bold text **text** -> <strong>text</strong>
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             // Italic text *text* -> <em>text</em> (but not if it's part of **)
@@ -2359,9 +2621,13 @@
         
         // Clean up any double <ul> tags
         formattedText = formattedText.replace(/<\/ul>\s*<ul>/g, '');
-        
-        // Wrap in paragraphs if not already wrapped
-        if (!formattedText.startsWith('<p>') && !formattedText.startsWith('<ul>')) {
+
+        // Clean up headers wrapped in paragraphs (fix <p><h3>...</h3></p> -> <h3>...</h3>)
+        formattedText = formattedText.replace(/<p>(<h[1-6]>.*?<\/h[1-6]>)<\/p>/g, '$1');
+        formattedText = formattedText.replace(/<p>(<h[1-6]>.*?<\/h[1-6]>)<br>/g, '$1<br>');
+
+        // Wrap in paragraphs if not already wrapped and not starting with a header or list
+        if (!formattedText.startsWith('<p>') && !formattedText.startsWith('<ul>') && !formattedText.startsWith('<h')) {
             formattedText = '<p>' + formattedText + '</p>';
         }
         
@@ -2427,6 +2693,20 @@
     function scrollToBottom() {
         const messagesDiv = document.getElementById('chat-messages');
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function scrollToMessage(messageElement) {
+        const messagesDiv = document.getElementById('chat-messages');
+        if (messageElement) {
+            // Scroll to the top of the message (where the answer starts)
+            // Using smooth scrolling and offset to position it nicely
+            const messageTop = messageElement.offsetTop;
+            const offset = 20; // Small offset from top for better visibility
+            messagesDiv.scrollTo({
+                top: messageTop - offset,
+                behavior: 'smooth'
+            });
+        }
     }
     
     function updateStatus(text, type = 'ready') {
@@ -2509,14 +2789,18 @@
     
     // Focus input on load and handle Enter key
     document.addEventListener('DOMContentLoaded', function() {
+        // Restore chat history and messages from localStorage
+        loadChatHistory();
+        restoreChatMessages();
+
         const chatInput = document.getElementById('chat-input');
         chatInput.focus();
-        
+
         // Auto-expand on input
         chatInput.addEventListener('input', function() {
             autoExpandTextarea(this);
         });
-        
+
         // Handle Enter key
         chatInput.addEventListener('keydown', function(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -2524,7 +2808,7 @@
                 handleChatSubmit(event);
             }
         });
-        
+
         // Initial sizing
         autoExpandTextarea(chatInput);
     });
