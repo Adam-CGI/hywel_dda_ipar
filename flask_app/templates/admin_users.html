@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - {{ brand_name }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Ensure form elements are always interactive */
+    .admin-form-container {
+        position: relative;
+        z-index: 10;
+    }
+    .admin-form-container form,
+    .admin-form-container input,
+    .admin-form-container button,
+    .admin-form-container label {
+        pointer-events: auto !important;
+    }
+    .admin-form-container input[type="checkbox"] {
+        cursor: pointer;
+        width: 1rem;
+        height: 1rem;
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-6xl admin-form-container">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-users-cog mr-3 text-hywel-600"></i>
+            User Management
+        </h1>
+        <p class="text-gray-600 mt-1">Manage user accounts and permissions</p>
+    </div>
+
+    <!-- Success/Error Messages -->
+    {% if success %}
+    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            <p class="text-green-700 font-medium">{{ success }}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if error %}
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+            <p class="text-red-700 font-medium">{{ error }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Create User Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user-plus mr-2 text-hywel-600"></i>
+                    Create User
+                </h2>
+                
+                <form method="POST" action="{{ url_for('admin.create_user') }}" class="space-y-4" id="create-user-form">
+                    <div>
+                        <label for="create-username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input 
+                            type="text" 
+                            id="create-username" 
+                            name="username" 
+                            required
+                            minlength="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-hywel-500 focus:border-hywel-500 text-sm"
+                            placeholder="Enter username"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="create-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input 
+                            type="password" 
+                            id="create-password" 
+                            name="password" 
+                            required
+                            minlength="8"
+                            class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-hywel-500 focus:border-hywel-500 text-sm"
+                            placeholder="Enter password"
+                        >
+                        <div class="mt-2 text-xs text-gray-500">
+                            <p class="font-medium mb-1">Password requirements:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                <li>Minimum 8 characters</li>
+                                <li>At least one uppercase letter</li>
+                                <li>At least one lowercase letter</li>
+                                <li>At least one number</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="create-is-admin" 
+                            name="is_admin"
+                            class="h-4 w-4 text-hywel-600 focus:ring-hywel-500 border-gray-300 rounded cursor-pointer"
+                        >
+                        <label for="create-is-admin" class="ml-2 text-sm text-gray-700 cursor-pointer">
+                            Grant admin privileges
+                        </label>
+                    </div>
+                    
+                    <button 
+                        type="submit"
+                        id="create-user-btn"
+                        class="w-full bg-hywel-600 hover:bg-hywel-700 text-white font-semibold py-2.5 px-4 rounded text-sm cursor-pointer"
+                    >
+                        <i class="fas fa-plus mr-2"></i>
+                        Create User
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- User List -->
+        <div class="lg:col-span-2">
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-list mr-2 text-hywel-600"></i>
+                        Users ({{ users|length }})
+                    </h2>
+                </div>
+                
+                {% if users %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for user in users %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 rounded-full bg-hywel-100 flex items-center justify-center">
+                                            <i class="fas fa-user text-hywel-600 text-sm"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900">{{ user.username }}</p>
+                                            {% if user.id == session.get('user_id') %}
+                                            <p class="text-xs text-gray-500">(You)</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if user.is_admin %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                        <i class="fas fa-crown mr-1"></i>
+                                        Admin
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-user mr-1"></i>
+                                        User
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if user.is_active %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Active
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-ban mr-1"></i>
+                                        Inactive
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ user.created_at[:10] if user.created_at else 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    {% if user.id != session.get('user_id') %}
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <!-- Toggle Active -->
+                                        <form method="POST" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" class="inline" style="display: inline;">
+                                            <button type="submit" 
+                                                class="p-1.5 rounded cursor-pointer {% if user.is_active %}text-red-600 hover:bg-red-50{% else %}text-green-600 hover:bg-green-50{% endif %}"
+                                                title="{{ 'Deactivate' if user.is_active else 'Activate' }} user">
+                                                <i class="fas {% if user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Toggle Admin -->
+                                        <form method="POST" action="{{ url_for('admin.toggle_user_admin', user_id=user.id) }}" class="inline" style="display: inline;">
+                                            <button type="submit" 
+                                                class="p-1.5 rounded cursor-pointer {% if user.is_admin %}text-orange-600 hover:bg-orange-50{% else %}text-purple-600 hover:bg-purple-50{% endif %}"
+                                                title="{{ 'Revoke' if user.is_admin else 'Grant' }} admin">
+                                                <i class="fas {% if user.is_admin %}fa-user-minus{% else %}fa-user-shield{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Reset Password (opens modal) -->
+                                        <button 
+                                            type="button"
+                                            onclick="openResetModal('{{ user.id }}', '{{ user.username }}')"
+                                            class="p-1.5 rounded text-blue-600 hover:bg-blue-50 cursor-pointer"
+                                            title="Reset password">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-gray-400 text-xs">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-6 py-12 text-center">
+                    <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No users found</p>
+                    <p class="text-gray-400 text-sm mt-1">Create your first user using the form</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div id="resetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center" style="z-index: 10000;">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-key mr-2 text-hywel-600"></i>
+                Reset Password
+            </h3>
+            <button onclick="closeResetModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-4">
+            Reset password for user: <strong id="resetUsername" class="text-hywel-600"></strong>
+        </p>
+        
+        <form id="resetForm" method="POST" action="">
+            <div class="mb-4">
+                <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input 
+                    type="password" 
+                    id="new_password" 
+                    name="new_password" 
+                    required
+                    minlength="8"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-hywel-500 focus:border-hywel-500 text-sm"
+                    placeholder="Enter new password"
+                >
+                <div class="mt-2 text-xs text-gray-500">
+                    <p>Min 8 chars, 1 uppercase, 1 lowercase, 1 number</p>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeResetModal()" 
+                    class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm font-medium cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" 
+                    class="flex-1 px-4 py-2 bg-hywel-600 text-white rounded hover:bg-hywel-700 text-sm font-medium cursor-pointer">
+                    Reset Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openResetModal(userId, username) {
+    document.getElementById('resetUsername').textContent = username;
+    document.getElementById('resetForm').action = '/admin/users/' + userId + '/reset-password';
+    document.getElementById('new_password').value = '';
+    document.getElementById('resetModal').classList.remove('hidden');
+    document.getElementById('resetModal').classList.add('flex');
+}
+
+function closeResetModal() {
+    document.getElementById('resetModal').classList.add('hidden');
+    document.getElementById('resetModal').classList.remove('flex');
+}
+
+// Close modal on backdrop click
+document.getElementById('resetModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeResetModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeResetModal();
+    }
+});
+</script>
+{% endblock %}

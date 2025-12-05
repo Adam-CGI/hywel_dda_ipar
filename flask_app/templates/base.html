@@ -542,12 +542,14 @@
             z-index: 9999;
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .loading-overlay.active {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
         }
         
         .loading-spinner {
@@ -1683,6 +1685,15 @@
                         <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-hywel-500 rounded-full"></div>
                         {% endif %}
                     </a>
+                    {% if session.get('is_admin') %}
+                    <a href="/admin/users" class="nav-pill group relative flex items-center px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ease-out {% if request.endpoint and 'admin' in request.endpoint %}bg-white text-hywel-700 shadow-lg scale-105{% else %}text-white hover:bg-white hover:bg-opacity-20 hover:scale-105 hover:shadow-md{% endif %}">
+                        <i class="fas fa-users-cog mr-2 transition-transform duration-200 group-hover:scale-110"></i>
+                        <span>Admin</span>
+                        {% if request.endpoint and 'admin' in request.endpoint %}
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-hywel-500 rounded-full"></div>
+                        {% endif %}
+                    </a>
+                    {% endif %}
                     <a href="/documents/upload" class="nav-pill-cta group relative flex items-center px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:scale-105 hover:from-emerald-400 hover:to-teal-500 {% if request.endpoint == 'documents.ui_upload_form' %}scale-105 shadow-xl{% endif %}">
                         <i class="fas fa-cloud-upload-alt mr-2 transition-transform duration-200 group-hover:scale-110"></i>
                         <span>Upload</span>
@@ -1739,6 +1750,15 @@
                         <i class="fas fa-check-circle ml-auto text-hywel-500"></i>
                         {% endif %}
                     </a>
+                    {% if session.get('is_admin') %}
+                    <a href="/admin/users" class="mobile-nav-item group flex items-center px-4 py-3 rounded-xl text-hywel-700 hover:bg-hywel-50 transition-all duration-200 {% if request.endpoint and 'admin' in request.endpoint %}bg-hywel-100 font-semibold{% endif %}">
+                        <i class="fas fa-users-cog mr-3 text-hywel-500 group-hover:scale-110 transition-transform"></i>
+                        <span>Admin</span>
+                        {% if request.endpoint and 'admin' in request.endpoint %}
+                        <i class="fas fa-check-circle ml-auto text-hywel-500"></i>
+                        {% endif %}
+                    </a>
+                    {% endif %}
                     <a href="/documents/upload" class="mobile-nav-item group flex items-center px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 shadow-lg {% if request.endpoint == 'documents.ui_upload_form' %}shadow-xl{% endif %}">
                         <i class="fas fa-cloud-upload-alt mr-3 group-hover:scale-110 transition-transform"></i>
                         <span>Upload Document</span>
