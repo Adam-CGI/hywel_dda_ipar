@@ -259,11 +259,19 @@ function addAssistantMessage(response) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message message-assistant';
     
+    // Check if AI says it doesn't have information
+    const responseText = response.response || '';
+    const hasNoInfo = responseText.toLowerCase().includes("don't have information") || 
+                      responseText.toLowerCase().includes("don't have any information") ||
+                      responseText.toLowerCase().includes("no information available");
+    
     // Format response with citations
     const formattedResponse = formatResponseWithCitations(response.response, response.sources);
-    const referencesHtml = buildReferencesSection(response.sources);
     
-    const sourceCount = response.sources ? response.sources.length : 0;
+    // Only show references if AI actually used the information
+    const referencesHtml = hasNoInfo ? '' : buildReferencesSection(response.sources);
+    
+    const sourceCount = hasNoInfo ? 0 : (response.sources ? response.sources.length : 0);
     const contextHtml = sourceCount > 0 ? `
         <div class="document-context">
             <i class="fas fa-database"></i>
@@ -283,7 +291,7 @@ function addAssistantMessage(response) {
     `;
     messagesDiv.appendChild(messageDiv);
 
-    // Scroll to message
+    // Scroll to show the user's question and top of the assistant's response
     setTimeout(() => scrollToMessage(messageDiv), 100);
 
     return messageDiv;
