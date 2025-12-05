@@ -21,10 +21,6 @@ PORT = int(os.getenv("PORT", 8000))
 BRAND_NAME = os.getenv("BRAND_NAME", "Hywel Dda University Health Board")
 BRAND_TAGLINE = os.getenv("BRAND_TAGLINE", "IPAR Document Intelligence (RAG Pilot)")
 
-# Authentication
-AUTH_USERNAME = os.getenv("AUTH_USERNAME", "admin")
-AUTH_PASSWORD = os.getenv("AUTH_PASSWORD", "changeme")
-
 # Azure Resource Group
 RESOURCE_GROUP = os.getenv("RESOURCE_GROUP")
 SUBSCRIPTION_ID = os.getenv("SUBSCRIPTION_ID")
@@ -48,7 +44,7 @@ AZURE_SEARCH_INDEX = os.getenv("AZURE_SEARCH_INDEX", "ipar-chunks")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_EMBED_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBED_DEPLOYMENT", "text-embedding-3-large")
-AZURE_OPENAI_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT", "gpt-4o-mini")
+AZURE_OPENAI_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT", "gpt-4o")
 
 # Document Intelligence
 AZURE_DOCINTEL_ENDPOINT = os.getenv("AZURE_DOCINTEL_ENDPOINT")

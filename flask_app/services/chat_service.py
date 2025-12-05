@@ -1,5 +1,5 @@
 """
-Chat service implementing RAG (Retrieval Augmented Generation) with GPT-4o-mini.
+Chat service implementing RAG (Retrieval Augmented Generation) with GPT-4o.
 Implements Microsoft best practices for RAG:
 - Grounding responses in search results to reduce hallucination
 - Inline citations for transparency and verification
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class ChatService:
-    """Service for RAG-powered chat using Azure OpenAI GPT-4o-mini."""
+    """Service for RAG-powered chat using Azure OpenAI GPT-4o."""
     
     # System prompt implementing RAG best practices
     SYSTEM_PROMPT = """You are an intelligent assistant for the Hywel Dda Health Board's Integrated Performance Assessment Report (IPAR) document system.
@@ -70,7 +70,7 @@ FORMAT YOUR RESPONSE:
             api_key=AZURE_OPENAI_API_KEY,
             api_version="2024-02-01"
         )
-        self.deployment = AZURE_OPENAI_CHAT_DEPLOYMENT or "gpt-4o-mini"
+        self.deployment = AZURE_OPENAI_CHAT_DEPLOYMENT or "gpt-4o"
         self.search_service = SearchService()
         
         logger.info(f"Initialized ChatService with deployment: {self.deployment}")
@@ -144,7 +144,7 @@ FORMAT YOUR RESPONSE:
         self,
         query: str,
         conversation_history: Optional[List[Dict[str, str]]] = None,
-        top_k: int = 5,
+        top_k: int = 10,
         temperature: float = 0.3,
         max_tokens: int = 1000
     ) -> Dict[str, Any]:
@@ -155,7 +155,7 @@ FORMAT YOUR RESPONSE:
         1. Retrieve relevant documents using hybrid search
         2. Format documents as grounding sources
         3. Build prompt with system instructions, few-shot examples, and sources
-        4. Call GPT-4o-mini for response generation
+        4. Call GPT-4o for response generation
         5. Return response with citations and source metadata
         
         Args:
@@ -234,7 +234,7 @@ FORMAT YOUR RESPONSE:
         self,
         query: str,
         conversation_history: Optional[List[Dict[str, str]]] = None,
-        top_k: int = 5,
+        top_k: int = 10,
         temperature: float = 0.3,
         max_tokens: int = 1000
     ):

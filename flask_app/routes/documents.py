@@ -844,7 +844,7 @@ def search_ui():
 @documents_bp.route('/chat', methods=['POST'])
 def chat():
     """
-    RAG-powered chat endpoint using GPT-4o-mini.
+    RAG-powered chat endpoint using GPT-4o.
     
     Implements Microsoft RAG best practices:
     - Grounding with hybrid search results
