@@ -51,6 +51,220 @@
         transform: translateY(-2px) scale(1.02);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
+    
+    /* Collapsible Chat Header */
+    .chat-header {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .chat-header.collapsed {
+        padding: 0.75rem 1.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .chat-header.collapsed .header-icon {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    
+    .chat-header.collapsed .header-icon i {
+        font-size: 1rem !important;
+    }
+    
+    .chat-header.collapsed .header-title {
+        font-size: 1.125rem !important;
+    }
+    
+    .chat-header.collapsed .header-subtitle {
+        display: none !important;
+    }
+    
+    .chat-header.collapsed .header-actions {
+        transform: scale(0.9);
+    }
+    
+    /* Trust Disclaimer Banner */
+    .trust-disclaimer {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 0.75rem;
+        padding: 0.625rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+        color: #92400e;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .trust-disclaimer i {
+        color: #f59e0b;
+        flex-shrink: 0;
+    }
+    
+    /* Academic-Style Inline Citations */
+    .citation-inline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        padding: 0 0.25rem;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1e40af;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        vertical-align: super;
+        margin: 0 0.125rem;
+        text-decoration: none;
+        line-height: 1;
+    }
+    
+    .citation-inline:hover {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* References Section */
+    .references-section {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .references-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .references-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .reference-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .reference-item:hover {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateX(4px);
+    }
+    
+    .reference-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 0.25rem;
+        flex-shrink: 0;
+    }
+    
+    .reference-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .reference-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.125rem;
+    }
+    
+    .reference-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .reference-preview-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 0.375rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .reference-preview-btn:hover {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+    }
+    
+    /* Document Context Footer */
+    .document-context {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .document-context i {
+        color: #94a3b8;
+    }
+    
+    /* Answer Card Structure */
+    .answer-card {
+        position: relative;
+    }
+    
+    .answer-summary {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .answer-body {
+        font-size: 1.0625rem;
+        line-height: 1.75;
+        color: #334155;
+    }
+    
     .chat-container {
         display: flex;
         flex-direction: column;
@@ -1852,34 +2066,30 @@
 {% endblock %}
 
 {% block content %}
-<!-- Chat Header -->
-<div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 animate-fade-in">
+<!-- Chat Header (Collapsible) -->
+<div id="chat-header" class="chat-header bg-white rounded-2xl shadow-xl p-6 mb-4 border border-gray-100 animate-fade-in">
     <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-hywel-500 to-hywel-600 rounded-xl flex items-center justify-center">
+            <div class="header-icon w-12 h-12 bg-gradient-to-br from-hywel-500 to-hywel-600 rounded-xl flex items-center justify-center">
                 <i class="fas fa-robot text-white text-xl"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">AI Assistant</h1>
-                <p class="text-gray-600">Powered by RAG technology for accurate, cited responses</p>
+                <h1 class="header-title text-2xl font-bold text-gray-900">IPAR Insights</h1>
+                <p class="header-subtitle text-gray-600">AI-powered analysis of IPAR documents with citations</p>
             </div>
         </div>
-        <div class="flex items-center space-x-4 text-sm text-gray-500">
+        <div class="header-actions flex items-center space-x-4 text-sm text-gray-500">
             <button
                 onclick="clearChatHistory()"
                 class="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 hover:shadow-md"
                 title="Clear chat history and start fresh"
             >
                 <i class="fas fa-trash-alt mr-2"></i>
-                Clear Chat
+                Clear
             </button>
             <div class="status-indicator status-online" id="chat-status">
                 <div class="status-dot"></div>
-                <span id="chat-status-text">Online</span>
-            </div>
-            <div class="flex items-center">
-                <i class="fas fa-shield-alt mr-2 text-green-500"></i>
-                Secure
+                <span id="chat-status-text">Ready</span>
             </div>
             <div class="flex items-center" id="performance-indicator" style="display: none;">
                 <i class="fas fa-tachometer-alt mr-2 text-blue-500"></i>
@@ -1889,14 +2099,20 @@
     </div>
 </div>
 
+<!-- Trust Disclaimer -->
+<div class="trust-disclaimer">
+    <i class="fas fa-info-circle"></i>
+    <span>Using IPAR documents uploaded by Hywel Dda UHB · Responses are AI-generated · Verify cited documents before decision-making</span>
+</div>
+
 <div class="chat-container animate-slide-up">
     <div class="chat-messages" id="chat-messages">
         <div class="welcome-message" id="welcome-message">
             <div class="welcome-icon">
                 <i class="fas fa-stethoscope"></i>
             </div>
-            <h3>Welcome to IPAR AI Chat</h3>
-            <p class="mb-6">Ask questions about your IPAR documents. I'll search the knowledge base and provide accurate answers with citations to source material.</p>
+            <h3>IPAR Document Intelligence</h3>
+            <p class="mb-6">Ask questions about IPAR reports. I'll analyze the knowledge base and provide evidence-based answers with numbered references.</p>
             
             <div class="example-queries">
                 <div class="example-query" onclick="askExample(this)">
@@ -2120,10 +2336,16 @@
 
             const messagesDiv = document.getElementById('chat-messages');
             const welcomeMessage = document.getElementById('welcome-message');
+            const chatHeader = document.getElementById('chat-header');
 
             // Hide welcome message and switch to suggestions mode
             if (welcomeMessage && !welcomeMessage.classList.contains('suggestions-mode')) {
                 welcomeMessage.classList.add('suggestions-mode');
+            }
+            
+            // Collapse header when restoring messages
+            if (chatHeader && !chatHeader.classList.contains('collapsed')) {
+                chatHeader.classList.add('collapsed');
             }
 
             // Restore each message
@@ -2139,7 +2361,7 @@
                             <div class="avatar">
                                 <i class="fas fa-robot"></i>
                             </div>
-                            <span>AI Assistant</span>
+                            <span>IPAR Insights</span>
                         </div>
                         <div class="message-content">${msg.html}</div>
                     `;
@@ -2432,82 +2654,44 @@
         messageDiv.style.opacity = '0';
         messageDiv.style.transform = 'translateY(20px) scale(0.95)';
         
-        // Format response with citation chips (now clickable)
+        // Collapse the header after first response
+        const chatHeader = document.getElementById('chat-header');
+        if (chatHeader && !chatHeader.classList.contains('collapsed')) {
+            chatHeader.classList.add('collapsed');
+        }
+        
+        // Format response with inline citations
         const formattedResponse = formatResponseWithCitations(response.response, response.sources);
         
-        // Build sources HTML with preview buttons
-        let sourcesHtml = '';
-        if (response.sources && response.sources.length > 0) {
-            sourcesHtml = `
-                <div class="sources-section">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-book-open mr-2 text-blue-600"></i>
-                        <strong class="text-gray-800">Sources (${response.sources.length})</strong>
-                    </div>
-                    <div class="grid grid-cols-1 gap-3">
-            `;
-            
-            response.sources.forEach((source, idx) => {
-                const docNum = idx + 1;
-                sourcesHtml += `
-                    <div class="source-item bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center mb-2">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full mr-2">${docNum}</span>
-                                    <strong class="text-blue-900">${escapeHtml(source.title || 'Unknown Document')}</strong>
-                                </div>
-                                <div class="text-sm text-blue-700 mb-2">
-                                    <i class="fas fa-file-pdf mr-1"></i>
-                                    ${escapeHtml(source.origin_filename || 'N/A')} • Page ${source.page_no || 'N/A'}
-                                </div>
-                                ${source.kpi_tags && source.kpi_tags.length > 0 ? `
-                                    <div class="flex flex-wrap gap-1 mb-2">
-                                        ${source.kpi_tags.map(tag => `<span class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full border border-purple-200"><i class="fas fa-tag mr-1"></i>${escapeHtml(tag)}</span>`).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                            ${source.thumb_url ? `
-                                <button onclick="showCitationPreview('${source.chunk_id}', '${source.doc_id}', ${source.page_no}, '${source.thumb_url}')" class="ml-3 inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md">
-                                    <i class="fas fa-eye mr-1"></i>
-                                    Preview
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            sourcesHtml += '</div></div>';
-        }
+        // Extract first sentence/paragraph for summary
+        const summaryText = extractSummary(response.response);
         
-        // Usage stats
-        let usageHtml = '';
-        if (response.usage) {
-            usageHtml = `
-                <div class="usage-stats mt-4 p-3 bg-gray-50 rounded-lg border">
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i class="fas fa-chart-bar mr-2"></i>
-                        <span>${response.usage.total_tokens} tokens used</span>
-                        <span class="mx-2">•</span>
-                        <span>${response.usage.prompt_tokens} prompt + ${response.usage.completion_tokens} completion</span>
-                    </div>
-                </div>
-            `;
-        }
+        // Build references section (replaces old sources cards)
+        const referencesHtml = buildReferencesSection(response.sources);
+        
+        // Document context footer
+        const sourceCount = response.sources ? response.sources.length : 0;
+        const contextHtml = sourceCount > 0 ? `
+            <div class="document-context">
+                <i class="fas fa-database"></i>
+                <span>Based on ${sourceCount} IPAR document${sourceCount !== 1 ? 's' : ''} from Hywel Dda UHB</span>
+            </div>
+        ` : '';
         
         messageDiv.innerHTML = `
             <div class="message-label">
                 <div class="avatar">
                     <i class="fas fa-robot"></i>
                 </div>
-                <span>AI Assistant</span>
+                <span>IPAR Insights</span>
             </div>
-            <div class="message-content">
-                <div class="prose prose-sm max-w-none">
+            <div class="message-content answer-card">
+                ${summaryText ? `<div class="answer-summary">${escapeHtml(summaryText)}</div>` : ''}
+                <div class="answer-body prose prose-sm max-w-none">
                     ${formattedResponse}
                 </div>
-                ${sourcesHtml}
-                ${usageHtml}
+                ${referencesHtml}
+                ${contextHtml}
             </div>
         `;
         messagesDiv.appendChild(messageDiv);
@@ -2523,23 +2707,67 @@
                 scrollToMessage(messageDiv);
             }, 100);
 
-            // Animate citation chips with delay
+            // Animate inline citations with delay
             setTimeout(() => {
-                const citationChips = messageDiv.querySelectorAll('.citation-chip');
-                citationChips.forEach((chip, index) => {
-                    chip.style.opacity = '0';
-                    chip.style.transform = 'translateY(10px) scale(0.9)';
+                const citationInlines = messageDiv.querySelectorAll('.citation-inline');
+                citationInlines.forEach((cite, index) => {
+                    cite.style.opacity = '0';
+                    cite.style.transform = 'scale(0.8)';
 
                     setTimeout(() => {
-                        chip.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                        chip.style.opacity = '1';
-                        chip.style.transform = 'translateY(0) scale(1)';
-                    }, index * 100);
+                        cite.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        cite.style.opacity = '1';
+                        cite.style.transform = 'scale(1)';
+                    }, index * 50);
                 });
             }, 200);
+            
+            // Animate reference items
+            setTimeout(() => {
+                const refItems = messageDiv.querySelectorAll('.reference-item');
+                refItems.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-10px)';
+
+                    setTimeout(() => {
+                        item.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateX(0)';
+                    }, index * 80);
+                });
+            }, 400);
         });
 
         return messageDiv;
+    }
+    
+    function extractSummary(text) {
+        // Extract first meaningful sentence as summary (up to ~150 chars)
+        if (!text) return '';
+        
+        // Remove markdown formatting for clean summary
+        let cleanText = text
+            .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove bold
+            .replace(/\*(.*?)\*/g, '$1')       // Remove italic
+            .replace(/\[Doc\s+\d+\]/g, '')     // Remove citations
+            .replace(/^#+\s*/gm, '')           // Remove headers
+            .replace(/^-\s*/gm, '')            // Remove list markers
+            .trim();
+        
+        // Find first sentence
+        const sentenceMatch = cleanText.match(/^[^.!?]+[.!?]/);
+        if (sentenceMatch && sentenceMatch[0].length > 20) {
+            return sentenceMatch[0].trim();
+        }
+        
+        // Fallback: first 150 chars with word boundary
+        if (cleanText.length > 150) {
+            const truncated = cleanText.substring(0, 150);
+            const lastSpace = truncated.lastIndexOf(' ');
+            return truncated.substring(0, lastSpace) + '...';
+        }
+        
+        return cleanText.length > 20 ? cleanText : '';
     }
     
     function addErrorMessage(text, suggestions = []) {
@@ -2631,57 +2859,80 @@
             formattedText = '<p>' + formattedText + '</p>';
         }
         
-        // Then convert markdown-style citations [Doc X] to styled, clickable chips with enhanced design
+        // Convert [Doc X] to academic-style inline citations [X]
         formattedText = formattedText.replace(/\[Doc\s+(\d+)\]/g, function(match, docNum) {
             const idx = parseInt(docNum) - 1;
-            const chipClass = getCitationChipClass(idx);
             
             if (sources && sources[idx]) {
                 const source = sources[idx];
-                const sourceTitle = escapeHtml(source.title || 'document');
-                const pageInfo = source.page_no ? ` (Page ${source.page_no})` : '';
+                const sourceTitle = escapeHtml(source.title || 'Document');
+                const pageInfo = source.page_no ? `, p. ${source.page_no}` : '';
+                const tooltip = `${sourceTitle}${pageInfo}`;
                 
                 if (source.thumb_url) {
-                    return `<span class="citation-chip ${chipClass}" 
-                                  onclick="showCitationPreview('${source.chunk_id}', '${source.doc_id}', ${source.page_no}, '${source.thumb_url}', '${sourceTitle}')" 
-                                  title="Click to preview: ${sourceTitle}${pageInfo}"
+                    return `<span class="citation-inline" 
+                                  onclick="showCitationPreview('${source.chunk_id}', '${source.doc_id}', ${source.page_no}, '${source.thumb_url}', '${sourceTitle.replace(/'/g, "\\'")}')" 
+                                  title="${tooltip}"
                                   tabindex="0"
                                   role="button"
-                                  aria-label="Citation ${docNum}: ${sourceTitle}${pageInfo}">
-                                <i class="fas fa-file-alt citation-icon"></i>
-                                Doc
-                                <span class="citation-number">${docNum}</span>
-                            </span>`;
+                                  aria-label="Reference ${docNum}: ${tooltip}">${docNum}</span>`;
                 } else {
-                    return `<span class="citation-chip ${chipClass}" 
-                                  title="Reference: ${sourceTitle}${pageInfo}"
+                    return `<span class="citation-inline" 
+                                  title="${tooltip}"
                                   tabindex="0"
-                                  role="button"
-                                  aria-label="Citation ${docNum}: ${sourceTitle}${pageInfo}">
-                                <i class="fas fa-file-alt citation-icon"></i>
-                                Doc
-                                <span class="citation-number">${docNum}</span>
-                            </span>`;
+                                  aria-label="Reference ${docNum}: ${tooltip}">${docNum}</span>`;
                 }
             }
-            return `<span class="citation-chip primary" 
-                          title="Reference to document ${docNum}"
-                          tabindex="0"
-                          role="button"
-                          aria-label="Citation ${docNum}">
-                        <i class="fas fa-file-alt citation-icon"></i>
-                        Doc
-                        <span class="citation-number">${docNum}</span>
-                    </span>`;
+            return `<span class="citation-inline" title="Reference ${docNum}">${docNum}</span>`;
         });
         
         return formattedText;
     }
     
-    function getCitationChipClass(index) {
-        // Assign different visual styles based on citation index for better hierarchy
-        const classes = ['primary', 'secondary', 'tertiary'];
-        return classes[index % classes.length];
+    function buildReferencesSection(sources) {
+        if (!sources || sources.length === 0) return '';
+        
+        let referencesHtml = `
+            <div class="references-section">
+                <div class="references-header">
+                    <i class="fas fa-book-open"></i>
+                    <span>References</span>
+                </div>
+                <div class="references-list">
+        `;
+        
+        sources.forEach((source, idx) => {
+            const docNum = idx + 1;
+            const title = escapeHtml(source.title || 'Unknown Document');
+            const filename = escapeHtml(source.origin_filename || 'Document');
+            const pageNo = source.page_no ? `Page ${source.page_no}` : '';
+            const hasPreview = source.thumb_url;
+            
+            referencesHtml += `
+                <div class="reference-item" ${hasPreview ? `onclick="showCitationPreview('${source.chunk_id}', '${source.doc_id}', ${source.page_no || 'null'}, '${source.thumb_url}', '${title.replace(/'/g, "\\'")}')"` : ''}>
+                    <div class="reference-number">${docNum}</div>
+                    <div class="reference-content">
+                        <div class="reference-title">${title}</div>
+                        <div class="reference-meta">
+                            <i class="fas fa-file-pdf mr-1"></i>${filename}${pageNo ? ' · ' + pageNo : ''}
+                        </div>
+                    </div>
+                    ${hasPreview ? `
+                        <button class="reference-preview-btn" onclick="event.stopPropagation(); showCitationPreview('${source.chunk_id}', '${source.doc_id}', ${source.page_no || 'null'}, '${source.thumb_url}', '${title.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-eye"></i>
+                            Preview
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        referencesHtml += `
+                </div>
+            </div>
+        `;
+        
+        return referencesHtml;
     }
     
     function escapeHtml(text) {
