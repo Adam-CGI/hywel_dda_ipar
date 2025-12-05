@@ -1,6 +1,0 @@
-# Gunicorn startup command for Azure App Service
-# Moved to repository root so App Service picks it up automatically.
-# Reduced timeout from 600 -> 300 to avoid excessively long worker blocks.
-# If specific long-running operations (e.g., Document Intelligence) routinely
-# exceed 300s, consider async processing or queue offloading instead of raising timeout.
-gunicorn --bind=0.0.0.0:8000 --timeout 300 --workers 4 --worker-class sync --access-logfile '-' --error-logfile '-' app:app

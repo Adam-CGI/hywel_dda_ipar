@@ -1,6 +1,7 @@
 # Basic gitignore additions (low risk) to prevent accidental secret leakage.
 .env
 CREDENTIALS.md
+.admin_credentials
 __pycache__/
 *.pyc
 *.pyo
