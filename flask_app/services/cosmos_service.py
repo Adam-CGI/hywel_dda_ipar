@@ -2,16 +2,47 @@
 Cosmos DB service for document metadata and event persistence.
 """
 import logging
+import re
+import uuid
 from datetime import datetime
 from azure.cosmos.exceptions import CosmosResourceExistsError, CosmosResourceNotFoundError
+from werkzeug.security import generate_password_hash, check_password_hash
 from config import (
     get_cosmos_container,
     COSMOS_COLL_DOCUMENTS,
     COSMOS_COLL_EVENTS,
-    COSMOS_COLL_LINEAGE
+    COSMOS_COLL_LINEAGE,
+    COSMOS_COLL_USERS
 )
 
 logger = logging.getLogger(__name__)
+
+
+def validate_password(password):
+    """
+    Validate password meets requirements.
+    
+    Requirements:
+    - Minimum 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    
+    Args:
+        password: Password string to validate
+        
+    Returns:
+        tuple: (is_valid: bool, error_message: str or None)
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r'[0-9]', password):
+        return False, "Password must contain at least one number"
+    return True, None
 
 
 class CosmosService:
@@ -21,6 +52,258 @@ class CosmosService:
         self.documents_container = get_cosmos_container(COSMOS_COLL_DOCUMENTS)
         self.events_container = get_cosmos_container(COSMOS_COLL_EVENTS)
         self.lineage_container = get_cosmos_container(COSMOS_COLL_LINEAGE)
+        self.users_container = get_cosmos_container(COSMOS_COLL_USERS)
+    
+    # ==================== USER MANAGEMENT ====================
+    
+    def create_user(self, username, password, is_admin=False, created_by=None):
+        """
+        Create a new user in Cosmos DB.
+        
+        Args:
+            username: Unique username
+            password: Plain text password (will be hashed)
+            is_admin: Whether user has admin privileges
+            created_by: Username of creator (optional)
+            
+        Returns:
+            dict: Created user record (without password_hash)
+            
+        Raises:
+            ValueError: If username exists or password invalid
+        """
+        # Check if username already exists
+        existing = self.get_user_by_username(username)
+        if existing:
+            raise ValueError(f"Username '{username}' already exists")
+        
+        # Validate password
+        is_valid, error = validate_password(password)
+        if not is_valid:
+            raise ValueError(error)
+        
+        user_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat()
+        
+        user_data = {
+            'id': user_id,
+            'username': username.lower().strip(),
+            'password_hash': generate_password_hash(password),
+            'is_admin': is_admin,
+            'is_active': True,
+            'created_at': now,
+            'created_by': created_by,
+            'updated_at': now
+        }
+        
+        try:
+            self.users_container.create_item(user_data)
+            logger.info(f"Created user '{username}' (admin={is_admin})")
+            
+            # Return user without password hash
+            return {k: v for k, v in user_data.items() if k != 'password_hash'}
+            
+        except Exception as e:
+            logger.error(f"Failed to create user '{username}': {e}")
+            raise
+    
+    def get_user_by_username(self, username):
+        """
+        Get user by username.
+        
+        Args:
+            username: Username to lookup
+            
+        Returns:
+            dict: User record or None
+        """
+        try:
+            query = "SELECT * FROM c WHERE c.username = @username"
+            parameters = [{"name": "@username", "value": username.lower().strip()}]
+            items = list(self.users_container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
+            return items[0] if items else None
+        except Exception as e:
+            logger.error(f"Failed to get user '{username}': {e}")
+            return None
+    
+    def get_user_by_id(self, user_id):
+        """
+        Get user by ID.
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            dict: User record or None
+        """
+        try:
+            return self.users_container.read_item(item=user_id, partition_key=user_id)
+        except CosmosResourceNotFoundError:
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get user by id '{user_id}': {e}")
+            return None
+    
+    def verify_user(self, username, password):
+        """
+        Verify username and password.
+        
+        Args:
+            username: Username
+            password: Plain text password
+            
+        Returns:
+            dict: User record (without password_hash) if valid, None otherwise
+        """
+        user = self.get_user_by_username(username)
+        if not user:
+            return None
+        
+        if not user.get('is_active', True):
+            logger.warning(f"Login attempt for inactive user '{username}'")
+            return None
+        
+        if check_password_hash(user['password_hash'], password):
+            logger.info(f"Successful login for user '{username}'")
+            return {k: v for k, v in user.items() if k != 'password_hash'}
+        
+        logger.warning(f"Failed login attempt for user '{username}'")
+        return None
+    
+    def list_users(self):
+        """
+        List all users (excluding password hashes).
+        
+        Returns:
+            list: User records
+        """
+        try:
+            query = """
+                SELECT c.id, c.username, c.is_admin, c.is_active, 
+                       c.created_at, c.created_by, c.updated_at
+                FROM c
+                ORDER BY c.created_at DESC
+            """
+            items = list(self.users_container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            return items
+        except Exception as e:
+            logger.error(f"Failed to list users: {e}")
+            return []
+    
+    def update_user(self, user_id, updates, updated_by=None):
+        """
+        Update user fields (not password).
+        
+        Args:
+            user_id: User identifier
+            updates: Dict of fields to update (is_admin, is_active)
+            updated_by: Username making the update
+            
+        Returns:
+            dict: Updated user record
+        """
+        try:
+            user = self.users_container.read_item(item=user_id, partition_key=user_id)
+            
+            # Only allow updating certain fields
+            allowed_fields = ['is_admin', 'is_active']
+            for field in allowed_fields:
+                if field in updates:
+                    user[field] = updates[field]
+            
+            user['updated_at'] = datetime.utcnow().isoformat()
+            if updated_by:
+                user['updated_by'] = updated_by
+            
+            self.users_container.upsert_item(user)
+            logger.info(f"Updated user '{user['username']}': {updates}")
+            
+            return {k: v for k, v in user.items() if k != 'password_hash'}
+            
+        except CosmosResourceNotFoundError:
+            logger.warning(f"User {user_id} not found for update")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to update user {user_id}: {e}")
+            raise
+    
+    def reset_password(self, user_id, new_password, reset_by=None):
+        """
+        Reset user password.
+        
+        Args:
+            user_id: User identifier
+            new_password: New plain text password
+            reset_by: Username performing reset
+            
+        Returns:
+            bool: True if successful
+            
+        Raises:
+            ValueError: If password invalid
+        """
+        # Validate new password
+        is_valid, error = validate_password(new_password)
+        if not is_valid:
+            raise ValueError(error)
+        
+        try:
+            user = self.users_container.read_item(item=user_id, partition_key=user_id)
+            user['password_hash'] = generate_password_hash(new_password)
+            user['updated_at'] = datetime.utcnow().isoformat()
+            if reset_by:
+                user['password_reset_by'] = reset_by
+                user['password_reset_at'] = datetime.utcnow().isoformat()
+            
+            self.users_container.upsert_item(user)
+            logger.info(f"Password reset for user '{user['username']}' by {reset_by}")
+            return True
+            
+        except CosmosResourceNotFoundError:
+            logger.warning(f"User {user_id} not found for password reset")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to reset password for user {user_id}: {e}")
+            raise
+    
+    def deactivate_user(self, user_id, deactivated_by=None):
+        """
+        Deactivate a user (soft delete).
+        
+        Args:
+            user_id: User identifier
+            deactivated_by: Username performing deactivation
+            
+        Returns:
+            dict: Updated user record or None
+        """
+        return self.update_user(user_id, {'is_active': False}, updated_by=deactivated_by)
+    
+    def activate_user(self, user_id, activated_by=None):
+        """
+        Reactivate a user.
+        
+        Args:
+            user_id: User identifier
+            activated_by: Username performing activation
+            
+        Returns:
+            dict: Updated user record or None
+        """
+        return self.update_user(user_id, {'is_active': True}, updated_by=activated_by)
+    
+    def user_exists(self, username):
+        """Check if username exists."""
+        return self.get_user_by_username(username) is not None
+    
+    # ==================== DOCUMENT MANAGEMENT ====================
     
     def save_document(self, doc_data):
         """

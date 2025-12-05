@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
 from functools import wraps
 
 # Ensure current directory is on sys.path
@@ -16,7 +15,7 @@ if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
 # Import config from current directory
-from config import FLASK_ENV, PORT, configure_logging, BRAND_NAME, BRAND_TAGLINE, AUTH_USERNAME, AUTH_PASSWORD
+from config import FLASK_ENV, PORT, configure_logging, BRAND_NAME, BRAND_TAGLINE
 
 # Import blueprints from subdirectories
 from routes.documents import documents_bp
@@ -24,8 +23,6 @@ from routes.documents import documents_bp
 # Configure logging
 logger = configure_logging()
 
-# Store hashed password
-HASHED_PASSWORD = generate_password_hash(AUTH_PASSWORD)
 
 def login_required(f):
     """Decorator to require login for routes."""
@@ -37,12 +34,28 @@ def login_required(f):
     return decorated_function
 
 
+def admin_required(f):
+    """Decorator to require admin privileges for routes."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login', next=request.url))
+        if not session.get('is_admin'):
+            return render_template('error.html', 
+                error="Access Denied", 
+                message="You do not have permission to access this page."), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def create_app():
     """Create and configure Flask application."""
-    # Templates are in the same directory structure
-    template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+    # Templates and static files are in the same directory structure
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(base_dir, 'templates')
+    static_dir = os.path.join(base_dir, 'static')
     
-    app = Flask(__name__, template_folder=template_dir)
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     
     # Configuration
     app.config['ENV'] = FLASK_ENV
@@ -69,6 +82,22 @@ def create_app():
     except Exception as e:
         logger.warning(f"Pages blueprint not registered: {e}")
     
+    # Register admin blueprint
+    try:
+        from routes.admin import admin_bp
+        app.register_blueprint(admin_bp)
+    except Exception as e:
+        logger.warning(f"Admin blueprint not registered: {e}")
+    
+    # Initialize Cosmos service for auth
+    cosmos_service = None
+    try:
+        from services.cosmos_service import CosmosService
+        cosmos_service = CosmosService()
+        logger.info("CosmosService initialized for authentication")
+    except Exception as e:
+        logger.error(f"Failed to initialize CosmosService: {e}")
+    
     # Apply authentication to all routes except public endpoints
     @app.before_request
     def require_authentication():
@@ -87,14 +116,25 @@ def create_app():
     # Login route
     @app.route('/login', methods=['GET', 'POST'])
     def login():
-        """Handle user login."""
+        """Handle user login via Cosmos DB."""
         if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
             
-            if username == AUTH_USERNAME and check_password_hash(HASHED_PASSWORD, password):
+            if not cosmos_service:
+                logger.error("CosmosService not available for authentication")
+                return render_template('login.html', error='Authentication service unavailable')
+            
+            # Verify user against Cosmos DB
+            user = cosmos_service.verify_user(username, password)
+            
+            if user:
                 session['logged_in'] = True
-                session['username'] = username
+                session['username'] = user['username']
+                session['user_id'] = user['id']
+                session['is_admin'] = user.get('is_admin', False)
+                
+                logger.info(f"User '{username}' logged in (admin={user.get('is_admin', False)})")
                 
                 # Redirect to the page they were trying to access, or home
                 next_page = request.args.get('next')
