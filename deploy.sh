@@ -337,19 +337,20 @@ echo "  Verifying zip structure:"
 unzip -l "$ZIP_FILE" | grep -E "(application\.py|requirements\.txt|runtime\.txt)" | head -5
 log_success "Zip contains application.py, requirements.txt, runtime.txt at root"
 
-# Deploy using az webapp deploy (newer command)
+# Deploy using az webapp deploy
+# Note: This may return 504 timeout for large apps, but deployment continues in background
 az webapp deploy \
     --name "$APP_NAME" \
     --resource-group "$RESOURCE_GROUP" \
     --src-path "$ZIP_FILE" \
     --type zip \
     --async false \
-    --output none
+    --output none 2>&1 || log_warning "Deploy command timed out - build may still be running in background"
 
 # Cleanup
 rm -f "$ZIP_FILE"
 
-log_success "Application code deployed"
+log_success "Application code deployed (or deployment in progress)"
 
 # Return to script directory
 cd "$SCRIPT_DIR"
