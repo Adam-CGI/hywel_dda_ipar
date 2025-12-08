@@ -52,17 +52,21 @@ class StorageService:
     
     def upload_to_raw(self, file_bytes, filename):
         """
-        Upload PDF to raw container.
+        Upload document to raw container.
         
         Args:
-            file_bytes: PDF file content as bytes
+            file_bytes: Document file content as bytes
             filename: Original filename
             
         Returns:
             tuple: (doc_id, blob_url)
         """
+        import os
+        
         doc_id = self.compute_sha256(file_bytes)
-        blob_name = f"{doc_id}.pdf"
+        # Preserve original file extension
+        ext = os.path.splitext(filename.lower())[1] or '.pdf'
+        blob_name = f"{doc_id}{ext}"
         
         try:
             blob_client = self.blob_service_client.get_blob_client(
@@ -78,6 +82,7 @@ class StorageService:
             # Upload with metadata
             metadata = {
                 "origin_filename": filename,
+                "file_extension": ext,
                 "upload_timestamp": datetime.utcnow().isoformat(),
                 "doc_id": doc_id
             }
@@ -308,13 +313,24 @@ class StorageService:
         }
         
         try:
-            # Archive raw PDF
-            raw_blob = f"{doc_id}.pdf"
+            # Archive raw document (support legacy .pdf and new multi-format naming)
+            # Try to get extension from Cosmos metadata, fallback to .pdf for legacy docs
+            ext = ".pdf"  # Default for legacy documents
+            try:
+                from services.cosmos_service import CosmosService
+                cosmos = CosmosService()
+                doc_meta = cosmos.get_document(doc_id)
+                if doc_meta and doc_meta.get("file_extension"):
+                    ext = doc_meta["file_extension"]
+            except Exception as e:
+                logger.warning(f"Could not retrieve file extension for {doc_id}, using .pdf: {e}")
+            
+            raw_blob = f"{doc_id}{ext}"
             if self.blob_exists(CONTAINER_RAW, raw_blob):
                 self.copy_blob(CONTAINER_RAW, raw_blob, CONTAINER_ARCHIVE, f"raw/{raw_blob}")
                 self.delete_blob(CONTAINER_RAW, raw_blob)
                 archived["raw"] = True
-                logger.info(f"Archived raw PDF for {doc_id}")
+                logger.info(f"Archived raw document for {doc_id}")
             
             # Archive extracted JSON
             extracted_blob = f"{doc_id}.json"

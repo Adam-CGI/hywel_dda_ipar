@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from azure.cosmos import CosmosClient
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 import logging
@@ -90,7 +90,7 @@ def get_document_intelligence_client():
     """Initialize and return Azure Document Intelligence client."""
     if not AZURE_DOCINTEL_ENDPOINT or not AZURE_DOCINTEL_KEY:
         raise ValueError("AZURE_DOCINTEL_ENDPOINT or AZURE_DOCINTEL_KEY not configured")
-    return DocumentAnalysisClient(
+    return DocumentIntelligenceClient(
         endpoint=AZURE_DOCINTEL_ENDPOINT,
         credential=AzureKeyCredential(AZURE_DOCINTEL_KEY)
     )

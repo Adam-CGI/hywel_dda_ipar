@@ -6,7 +6,7 @@ Flask-HTTPAuth==4.8.0
 # Azure SDKs
 azure-storage-blob==12.19.0
 azure-cosmos==4.5.1
-azure-ai-formrecognizer==3.3.2
+azure-ai-documentintelligence==1.0.2
 azure-search-documents==11.4.0
 openai==2.6.0
 

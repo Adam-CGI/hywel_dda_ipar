@@ -13,8 +13,14 @@ from services.search_index_service import SearchIndexService
 from services.search_service import SearchService
 from services.chat_service import ChatService
 from services.chunking_service import ChunkingService
+import os
 
 logger = logging.getLogger(__name__)
+
+# Allowed file extensions for upload (Azure Document Intelligence v4.0 supported formats)
+ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.docx', '.xlsx', '.pptx'}
+# Legacy formats that we explicitly reject with helpful message
+LEGACY_OFFICE_FORMATS = {'.doc', '.xls', '.ppt'}
 
 documents_bp = Blueprint('documents', __name__, url_prefix='/api/documents')
 
@@ -59,10 +65,20 @@ def upload_document():
             }), 400
         
         # Check file type
-        if not file.filename.lower().endswith('.pdf'):
+        ext = os.path.splitext(file.filename.lower())[1]
+        
+        # Check for legacy Office formats and provide helpful message
+        if ext in LEGACY_OFFICE_FORMATS:
+            format_map = {'.doc': '.docx', '.xls': '.xlsx', '.ppt': '.pptx'}
+            return jsonify({
+                'error': 'Legacy format not supported',
+                'message': f'The {ext} format is not supported. Please save your file as {format_map[ext]} (newer Office format) and try again.'
+            }), 400
+        
+        if ext not in ALLOWED_EXTENSIONS:
             return jsonify({
                 'error': 'Invalid file type',
-                'message': 'Only PDF files are supported'
+                'message': f"Supported formats: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
             }), 400
         
         # Read file bytes
@@ -306,10 +322,24 @@ def upload_document():
         return jsonify(response_data), 201
         
     except Exception as e:
-        logger.error(f"Upload failed: {e}")
+        error_message = str(e)
+        logger.error(f"Upload failed: {error_message}")
+        
+        # Check for Azure Document Intelligence errors
+        if "InvalidContent" in error_message or "unsupported" in error_message.lower():
+            return jsonify({
+                'error': 'Unsupported file format',
+                'message': 'The file could not be processed. Please ensure you are uploading a valid document. Supported formats: PDF, DOCX (not DOC), XLSX (not XLS), PPTX (not PPT), PNG, JPG, TIFF, BMP.'
+            }), 400
+        elif "InvalidRequest" in error_message:
+            return jsonify({
+                'error': 'Invalid document',
+                'message': 'The document appears to be corrupted or invalid. Please try a different file.'
+            }), 400
+        
         return jsonify({
             'error': 'Upload failed',
-            'message': str(e)
+            'message': error_message
         }), 500
 
 

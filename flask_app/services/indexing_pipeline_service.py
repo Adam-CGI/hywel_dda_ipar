@@ -33,7 +33,7 @@ class IndexingPipelineService:
     def process_and_index_document(
         self,
         doc_id: str,
-        pdf_bytes: bytes,
+        document_bytes: bytes,
         origin_filename: str,
         metadata: Dict[str, Any] | None = None
     ) -> Dict[str, Any]:
@@ -41,8 +41,8 @@ class IndexingPipelineService:
         Full pipeline: extract → chunk → embed → index.
         
         Args:
-            doc_id: Document identifier (SHA256 of PDF bytes)
-            pdf_bytes: PDF file content
+            doc_id: Document identifier (SHA256 of document bytes)
+            document_bytes: Document file content
             origin_filename: Original filename
             metadata: Optional additional metadata (title, version, etc.)
             
@@ -57,7 +57,7 @@ class IndexingPipelineService:
             logger.info(f"Step 1: Extracting document {doc_id}")
             processing_result = self.extraction_service.process_document(
                 doc_id,
-                pdf_bytes,
+                document_bytes,
                 origin_filename
             )
             extraction_data = processing_result["extraction_data"]
@@ -108,6 +108,11 @@ class IndexingPipelineService:
             
             # Step 5: Record in Cosmos DB
             logger.info(f"Step 5: Recording document metadata in Cosmos DB")
+            
+            # Extract file extension from origin_filename
+            import os
+            file_extension = os.path.splitext(origin_filename.lower())[1] or '.pdf'
+            
             doc_metadata = {
                 "id": doc_id,
                 "doc_id": doc_id,
@@ -115,6 +120,7 @@ class IndexingPipelineService:
                 "version": metadata.get("version", 1) if metadata else 1,
                 "title": metadata.get("title", origin_filename) if metadata else origin_filename,
                 "origin_filename": origin_filename,
+                "file_extension": file_extension,
                 "page_count": len(extraction_data.get("pages", [])),
                 "chunk_count": len(chunks),
                 "indexed_chunk_count": upload_result["uploaded"],
