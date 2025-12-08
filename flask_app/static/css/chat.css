@@ -270,6 +270,55 @@
 }
 
 /* ============================================
+   Quick Suggestions (Always Visible)
+   ============================================ */
+.quick-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.quick-suggestion-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--nhs-blue);
+    background: rgba(0, 94, 184, 0.05);
+    border: 1px solid rgba(0, 94, 184, 0.15);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.quick-suggestion-btn:hover {
+    background: rgba(0, 94, 184, 0.12);
+    border-color: var(--nhs-blue);
+    transform: translateY(-1px);
+}
+
+.quick-suggestion-btn:active {
+    transform: translateY(0);
+}
+
+.quick-suggestion-btn i {
+    font-size: 0.65rem;
+    opacity: 0.8;
+}
+
+.quick-suggestion-btn span {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================
    Chat Input
    ============================================ */
 .chat-input-container {
@@ -542,6 +591,20 @@
     .chat-suggestion {
         width: 100%;
         text-align: center;
+    }
+    
+    /* Quick suggestions responsive */
+    .quick-suggestions {
+        justify-content: center;
+    }
+    
+    .quick-suggestion-btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.65rem;
+    }
+    
+    .quick-suggestion-btn span {
+        max-width: 60px;
     }
 }
 

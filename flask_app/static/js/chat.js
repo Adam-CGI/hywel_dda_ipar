@@ -499,7 +499,8 @@ function autoExpandTextarea(textarea) {
 }
 
 function askExample(element) {
-    const query = element.textContent.trim();
+    // Check for data-query attribute first (for compact buttons), then fall back to title, then textContent
+    const query = element.getAttribute('data-query') || element.getAttribute('title') || element.textContent.trim();
     const chatInput = document.getElementById('chat-input');
     chatInput.value = query;
     chatInput.focus();

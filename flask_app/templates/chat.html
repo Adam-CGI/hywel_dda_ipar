@@ -87,6 +87,26 @@
     
     <!-- Input Area -->
     <div class="chat-input-container">
+        <!-- Quick Suggestions - Always Visible -->
+        <div class="quick-suggestions" id="quick-suggestions">
+            <button class="quick-suggestion-btn" onclick="askExample(this)" data-query="What are the key performance indicators?" title="What are the key performance indicators?">
+                <i class="fas fa-chart-line"></i>
+                <span>KPIs</span>
+            </button>
+            <button class="quick-suggestion-btn" onclick="askExample(this)" data-query="Show me the latest performance data" title="Show me the latest performance data">
+                <i class="fas fa-chart-bar"></i>
+                <span>Performance</span>
+            </button>
+            <button class="quick-suggestion-btn" onclick="askExample(this)" data-query="What are the areas of concern?" title="What are the areas of concern?">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Concerns</span>
+            </button>
+            <button class="quick-suggestion-btn" onclick="askExample(this)" data-query="What improvements have been made?" title="What improvements have been made?">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>Improvements</span>
+            </button>
+        </div>
+        
         <form id="chat-form" onsubmit="handleChatSubmit(event); return false;">
             <div class="chat-input-wrapper">
                 <textarea 

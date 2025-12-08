@@ -3,7 +3,7 @@ Document upload routes for IPAR Document Intelligence.
 """
 import logging
 import json
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, session
 from datetime import datetime
 from services.storage_service import StorageService
 from services.extraction_service import ExtractionService
@@ -904,19 +904,34 @@ def chat():
             max_tokens=max_tokens
         )
         
-        # Log event to Cosmos
+        # Log event to Cosmos with user attribution
         try:
             cosmos_service.log_event(
                 doc_id='chat_system',  # System-level event
                 event_type='chat_query',
+                user_id=session.get('user_id'),
                 details={
                     'query': query[:200],  # Truncate for storage
+                    'username': session.get('username'),
                     'sources_count': len(result['sources']),
                     'tokens_used': result['usage']['total_tokens']
                 }
             )
         except Exception as log_error:
             logger.warning(f"Failed to log chat event: {log_error}")
+        
+        # Save full query to queries collection for user history
+        try:
+            cosmos_service.save_query(
+                user_id=session.get('user_id'),
+                username=session.get('username'),
+                query=query,
+                response=result['response'],
+                sources=result['sources'],
+                tokens_used=result['usage']
+            )
+        except Exception as save_error:
+            logger.warning(f"Failed to save query to history: {save_error}")
         
         return jsonify(result), 200
         

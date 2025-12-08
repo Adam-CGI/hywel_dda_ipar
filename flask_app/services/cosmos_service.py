@@ -12,7 +12,8 @@ from config import (
     COSMOS_COLL_DOCUMENTS,
     COSMOS_COLL_EVENTS,
     COSMOS_COLL_LINEAGE,
-    COSMOS_COLL_USERS
+    COSMOS_COLL_USERS,
+    COSMOS_COLL_QUERIES
 )
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class CosmosService:
         self.events_container = get_cosmos_container(COSMOS_COLL_EVENTS)
         self.lineage_container = get_cosmos_container(COSMOS_COLL_LINEAGE)
         self.users_container = get_cosmos_container(COSMOS_COLL_USERS)
+        self.queries_container = get_cosmos_container(COSMOS_COLL_QUERIES)
     
     # ==================== USER MANAGEMENT ====================
     
@@ -302,6 +304,111 @@ class CosmosService:
     def user_exists(self, username):
         """Check if username exists."""
         return self.get_user_by_username(username) is not None
+    
+    # ==================== QUERY HISTORY MANAGEMENT ====================
+    
+    def save_query(self, user_id, username, query, response, sources=None, 
+                   tokens_used=None, conversation_id=None):
+        """
+        Save a chat query to Cosmos DB for user history.
+        
+        Args:
+            user_id: User identifier from session
+            username: Username from session
+            query: The user's question
+            response: The AI-generated response
+            sources: List of source documents used (optional)
+            tokens_used: Token usage statistics (optional)
+            conversation_id: Conversation session identifier (optional)
+            
+        Returns:
+            dict: Saved query record
+        """
+        try:
+            query_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat()
+            
+            # Simplify sources to avoid storing large embeddings
+            simplified_sources = []
+            if sources:
+                for src in sources[:10]:  # Limit to first 10 sources
+                    simplified_sources.append({
+                        'doc_id': src.get('doc_id'),
+                        'chunk_id': src.get('chunk_id'),
+                        'title': src.get('title'),
+                        'page_no': src.get('page_no'),
+                        'score': src.get('score')
+                    })
+            
+            query_data = {
+                'id': query_id,
+                'user_id': user_id,
+                'username': username,
+                'query': query,
+                'response': response,
+                'sources': simplified_sources,
+                'sources_count': len(simplified_sources),
+                'tokens_used': tokens_used,
+                'conversation_id': conversation_id,
+                'created_at': now
+            }
+            
+            result = self.queries_container.create_item(query_data)
+            logger.info(f"Saved query {query_id} for user {username}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to save query for user {username}: {e}")
+            raise
+    
+    def get_user_queries(self, user_id, limit=50):
+        """
+        Get query history for a specific user.
+        
+        Args:
+            user_id: User identifier
+            limit: Maximum number of queries to return (default 50)
+            
+        Returns:
+            list: Query records ordered by most recent first
+        """
+        try:
+            query = f"""
+                SELECT TOP {limit} c.id, c.query, c.response, c.sources_count, 
+                       c.tokens_used, c.created_at, c.conversation_id
+                FROM c 
+                WHERE c.user_id = @user_id
+                ORDER BY c.created_at DESC
+            """
+            parameters = [{"name": "@user_id", "value": user_id}]
+            
+            items = list(self.queries_container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
+            return items
+        except Exception as e:
+            logger.error(f"Failed to get queries for user {user_id}: {e}")
+            return []
+    
+    def get_query_by_id(self, query_id):
+        """
+        Get a specific query by ID.
+        
+        Args:
+            query_id: Query identifier
+            
+        Returns:
+            dict: Query record or None
+        """
+        try:
+            return self.queries_container.read_item(item=query_id, partition_key=query_id)
+        except CosmosResourceNotFoundError:
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get query {query_id}: {e}")
+            return None
     
     # ==================== DOCUMENT MANAGEMENT ====================
     
