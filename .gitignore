@@ -194,3 +194,7 @@ cython_debug/
 # Test metrics - can be large and regenerated
 tests/metrics/*.json
 tests/metrics/*.md
+# Test result artifacts
+test-results.xml
+junit.xml
+pytest*.xml
